@@ -213,13 +213,13 @@
   @media print {
     @page {
       size: A4;
-      margin: 0.5in;
+      margin: 10mm;
     }
     body * {
       visibility: hidden;
     }
     #preview-content, #preview-content * {
-      visibility: visible;
+      visibility: visible !important;
     }
     #preview-content {
       position: absolute;
@@ -227,11 +227,20 @@
       top: 0;
       width: 100%;
     }
-    /* Ensure good print quality */
-    * {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      color-adjust: exact !important;
+    .modal-backdrop {
+      background: none !important;
+      position: static !important;
+    }
+    .modal-content {
+      box-shadow: none !important;
+      border: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    .modal-header, .modal-footer {
+      display: none !important;
     }
   }
   
@@ -549,59 +558,61 @@ function printInvoice(inv) {
     previewContent.innerHTML = formatInvoice(inv, st);
     modal.style.display = 'block';
 
-    // Remove old event listeners by cloning buttons
-    const newPrintBtn = printBtn.cloneNode(true);
-    const newCancelBtn = cancelBtn.cloneNode(true);
-    const newCloseModal = closeModal.cloneNode(true);
-    
-    printBtn.parentNode.replaceChild(newPrintBtn, printBtn);
-    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-    closeModal.parentNode.replaceChild(newCloseModal, closeModal);
-
-    newCloseModal.onclick = () => {
+    const closeModalHandler = () => {
         modal.style.display = 'none';
+        cleanup();
     };
 
-    newCancelBtn.onclick = () => {
-        modal.style.display = 'none';
-    };
-
-    newPrintBtn.onclick = () => {
+    const printHandler = () => {
         window.print();
         modal.style.display = 'none';
+        cleanup();
     };
 
-    window.onclick = (event) => {
+    const windowClickHandler = (event) => {
         if (event.target == modal) {
             modal.style.display = 'none';
+            cleanup();
         }
     };
+
+    const cleanup = () => {
+        closeModal.removeEventListener('click', closeModalHandler);
+        cancelBtn.removeEventListener('click', closeModalHandler);
+        printBtn.removeEventListener('click', printHandler);
+        window.removeEventListener('click', windowClickHandler);
+    };
+
+    closeModal.addEventListener('click', closeModalHandler);
+    cancelBtn.addEventListener('click', closeModalHandler);
+    printBtn.addEventListener('click', printHandler);
+    window.addEventListener('click', windowClickHandler);
 }
 function formatInvoice(inv, store) {
     const cust = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
     let html = `
-        <div style="font-family: Arial, sans-serif; font-size: 10pt; width: 100%; max-width: 580px; margin: 0 auto; padding: 8px; background: white; color: black;">
-            <div style="text-align: center; border-bottom: 2px solid black; padding-bottom: 5px; margin-bottom: 8px;">
-                <h2 style="margin: 0; font-size: 14pt; font-weight: bold; color: black;">${store?.name || 'Clothix Retail'}</h2>
-                <p style="margin: 2px 0; font-size: 9pt; color: black;">${store?.address || ''} | ${store?.phone || ''}</p>
+        <div style="font-family: Arial, sans-serif; font-size: 9pt; width: 100%; max-width: 550px; margin: 0; padding: 5px; background: white; color: black;">
+            <div style="text-align: center; border-bottom: 1px solid black; padding-bottom: 3px; margin-bottom: 5px;">
+                <h2 style="margin: 0; font-size: 12pt; font-weight: bold; color: black;">${store?.name || 'Clothix Retail'}</h2>
+                <p style="margin: 1px 0; font-size: 8pt; color: black;">${store?.address || ''} | ${store?.phone || ''}</p>
             </div>
             
-            <table style="width: 100%; font-size: 9pt; margin: 5px 0; color: black;">
+            <table style="width: 100%; font-size: 8pt; margin: 3px 0; color: black;">
                 <tr>
-                    <td style="padding: 2px; color: black;"><strong>Invoice:</strong> ${inv.number}</td>
-                    <td style="padding: 2px; text-align: right; color: black;">${inv.date} ${inv.time}</td>
+                    <td style="padding: 1px; color: black;"><strong>Invoice:</strong> ${inv.number}</td>
+                    <td style="padding: 1px; text-align: right; color: black;">${inv.date} ${inv.time}</td>
                 </tr>
-                ${cust ? `<tr><td colspan="2" style="padding: 2px; color: black;"><strong>Customer:</strong> ${cust.name}${cust.phone ? ' | ' + cust.phone : ''}</td></tr>` : '<tr><td colspan="2" style="padding: 2px; color: black;">Walk-in Customer</td></tr>'}
+                ${cust ? `<tr><td colspan="2" style="padding: 1px; color: black;"><strong>Customer:</strong> ${cust.name}${cust.phone ? ' | ' + cust.phone : ''}</td></tr>` : '<tr><td colspan="2" style="padding: 1px; color: black;">Walk-in Customer</td></tr>'}
             </table>
             
-            <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 9pt; color: black;">
+            <table style="width: 100%; border-collapse: collapse; margin: 3px 0; font-size: 8pt; color: black;">
                 <thead>
-                    <tr style="border-top: 2px solid black; border-bottom: 2px solid black; background: white;">
-                        <th style="text-align: left; padding: 4px; color: black;">Item</th>
-                        <th style="text-align: center; padding: 4px; color: black;">Qty</th>
-                        <th style="text-align: right; padding: 4px; color: black;">Price</th>
-                        ${inv.items.some(it => it.discount > 0) ? '<th style="text-align: right; padding: 4px; color: black;">Disc</th>' : ''}
-                        <th style="text-align: right; padding: 4px; color: black;">Total</th>
+                    <tr style="border-top: 1px solid black; border-bottom: 1px solid black; background: white;">
+                        <th style="text-align: left; padding: 2px; color: black;">Item</th>
+                        <th style="text-align: center; padding: 2px; color: black;">Qty</th>
+                        <th style="text-align: right; padding: 2px; color: black;">Price</th>
+                        ${inv.items.some(it => it.discount > 0) ? '<th style="text-align: right; padding: 2px; color: black;">Disc</th>' : ''}
+                        <th style="text-align: right; padding: 2px; color: black;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -614,14 +625,13 @@ function formatInvoice(inv, store) {
         const lineTotal = base - disc;
         html += `
             <tr style="background: white;">
-                <td style="padding: 3px; border-bottom: 1px solid #ddd; color: black;">
-                    <strong>${p.name || 'N/A'}</strong><br>
-                    <span style="font-size: 8pt; color: #555;">${it.size} | ${it.color}</span>
+                <td style="padding: 2px; border-bottom: 1px solid #ddd; color: black;">
+                    <strong>${p.name || 'N/A'}</strong> <span style="font-size: 7pt; color: #555;">(${it.size}/${it.color})</span>
                 </td>
-                <td style="text-align: center; padding: 3px; border-bottom: 1px solid #ddd; color: black;">${it.qty}</td>
-                <td style="text-align: right; padding: 3px; border-bottom: 1px solid #ddd; color: black;">₹${money(it.price)}</td>
-                ${inv.items.some(it => it.discount > 0) ? `<td style="text-align: right; padding: 3px; border-bottom: 1px solid #ddd; color: black;">${it.discount > 0 ? it.discount + '%' : '-'}</td>` : ''}
-                <td style="text-align: right; padding: 3px; border-bottom: 1px solid #ddd; color: black;">₹${money(lineTotal)}</td>
+                <td style="text-align: center; padding: 2px; border-bottom: 1px solid #ddd; color: black;">${it.qty}</td>
+                <td style="text-align: right; padding: 2px; border-bottom: 1px solid #ddd; color: black;">₹${money(it.price)}</td>
+                ${inv.items.some(it => it.discount > 0) ? `<td style="text-align: right; padding: 2px; border-bottom: 1px solid #ddd; color: black;">${it.discount > 0 ? it.discount + '%' : '-'}</td>` : ''}
+                <td style="text-align: right; padding: 2px; border-bottom: 1px solid #ddd; color: black;">₹${money(lineTotal)}</td>
             </tr>
         `;
     });
@@ -630,34 +640,34 @@ function formatInvoice(inv, store) {
                 </tbody>
             </table>
             
-            <table style="width: 100%; font-size: 9pt; margin: 8px 0; color: black;">
+            <table style="width: 100%; font-size: 8pt; margin: 3px 0; color: black;">
                 <tr>
-                    <td style="padding: 2px; text-align: right; color: black;">Subtotal:</td>
-                    <td style="padding: 2px; text-align: right; width: 80px; color: black;">₹ ${money(inv.totals.sub)}</td>
+                    <td style="padding: 1px; text-align: right; color: black;">Subtotal:</td>
+                    <td style="padding: 1px; text-align: right; width: 70px; color: black;">₹ ${money(inv.totals.sub)}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 2px; text-align: right; color: black;">Tax (GST):</td>
-                    <td style="padding: 2px; text-align: right; color: black;">₹ ${money(inv.totals.tax)}</td>
+                    <td style="padding: 1px; text-align: right; color: black;">Tax (GST):</td>
+                    <td style="padding: 1px; text-align: right; color: black;">₹ ${money(inv.totals.tax)}</td>
                 </tr>
                 ${inv.totals.round !== 0 ? `
                 <tr>
-                    <td style="padding: 2px; text-align: right; color: black;">Rounding:</td>
-                    <td style="padding: 2px; text-align: right; color: black;">₹ ${money(inv.totals.round)}</td>
+                    <td style="padding: 1px; text-align: right; color: black;">Rounding:</td>
+                    <td style="padding: 1px; text-align: right; color: black;">₹ ${money(inv.totals.round)}</td>
                 </tr>
                 ` : ''}
-                <tr style="border-top: 2px solid black; font-weight: bold; background: white;">
-                    <td style="padding: 5px 2px; text-align: right; font-size: 11pt; color: black;">TOTAL:</td>
-                    <td style="padding: 5px 2px; text-align: right; font-size: 12pt; color: black;">₹ ${money(inv.totals.total)}</td>
+                <tr style="border-top: 1px solid black; font-weight: bold; background: white;">
+                    <td style="padding: 3px 1px; text-align: right; font-size: 10pt; color: black;">TOTAL:</td>
+                    <td style="padding: 3px 1px; text-align: right; font-size: 10pt; color: black;">₹ ${money(inv.totals.total)}</td>
                 </tr>
             </table>
             
-            <p style="margin: 8px 0; font-size: 9pt; color: black;"><strong>Payment:</strong> ${inv.payments.mode}${inv.payments.amount ? ' - ₹' + money(inv.payments.amount) : ''}</p>
+            <p style="margin: 3px 0; font-size: 8pt; color: black;"><strong>Payment:</strong> ${inv.payments.mode}${inv.payments.amount ? ' - ₹' + money(inv.payments.amount) : ''}</p>
             
-            ${inv.notes ? `<p style="margin: 5px 0; font-size: 8pt; color: black;"><strong>Notes:</strong> ${inv.notes}</p>` : ''}
+            ${inv.notes ? `<p style="margin: 2px 0; font-size: 7pt; color: black;"><strong>Notes:</strong> ${inv.notes}</p>` : ''}
             
-            <div style="text-align: center; margin: 10px 0 5px 0; padding-top: 8px; border-top: 1px dashed black;">
-                <p style="margin: 3px 0; font-size: 10pt; font-weight: bold; color: black;">Thank You!</p>
-                <p style="margin: 2px 0; font-size: 8pt; color: #555;">GST Invoice | No Returns/Exchange</p>
+            <div style="text-align: center; margin: 5px 0 3px 0; padding-top: 5px; border-top: 1px dashed black;">
+                <p style="margin: 2px 0; font-size: 9pt; font-weight: bold; color: black;">Thank You!</p>
+                <p style="margin: 1px 0; font-size: 7pt; color: #555;">GST Invoice | No Returns/Exchange</p>
             </div>
         </div>
     `;
