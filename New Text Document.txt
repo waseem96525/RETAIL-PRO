@@ -1,0 +1,1828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clothing Retail – Multi-Store Manager</title>
+<style>
+  :root{
+    --bg:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --bg-solid:#f5f7fa;
+    --panel:#ffffff;--panel-2:#f8fafc;--muted:#64748b;
+    --text:#1e293b;--accent:#6366f1;--accent-2:#10b981;--warn:#f59e0b;--danger:#ef4444;
+    --chip:#e0e7ff;--border:#e2e8f0;
+    --good:#10b981;--bad:#ef4444;
+    --shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06);
+    --shadow-lg:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);
+    --radius:12px;
+    --gradient-primary:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-success:linear-gradient(135deg, #10b981 0%, #059669 100%);
+    --gradient-danger:linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+  [data-theme="dark"]{
+    --bg:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    --bg-solid:#0f172a;
+    --panel:#1e293b;--panel-2:#334155;--muted:#94a3b8;
+    --text:#f1f5f9;--accent:#818cf8;--accent-2:#34d399;--warn:#fbbf24;--danger:#f87171;
+    --chip:#334155;--border:#475569;
+    --shadow:0 4px 6px -1px rgba(0,0,0,.3),0 2px 4px -1px rgba(0,0,0,.2);
+    --shadow-lg:0 20px 25px -5px rgba(0,0,0,.3),0 10px 10px -5px rgba(0,0,0,.2);
+    --gradient-primary:linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+    --gradient-success:linear-gradient(135deg, #34d399 0%, #10b981 100%);
+    --gradient-danger:linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{margin:0;font:16px/1.5 "Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--text);background:var(--bg-solid);position:relative}
+  body::before{content:'';position:fixed;top:0;left:0;right:0;height:400px;background:var(--bg);z-index:-1}
+  header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);box-shadow:var(--shadow);border-bottom:1px solid var(--border)}
+  [data-theme="dark"] header{background:rgba(30,41,59,0.95)}
+  .bar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;max-width:1400px;margin:0 auto}
+  @media (max-width: 768px) {
+    .bar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:48px;height:48px;border-radius:12px;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;color:white;box-shadow:0 4px 6px -1px rgba(102,126,234,0.4);transition:transform .2s}
+  .logo:hover{transform:scale(1.05)}
+  .brand h1{font-size:22px;margin:0;font-weight:700;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{padding:10px 18px;border:none;background:transparent;color:var(--muted);border-radius:var(--radius);cursor:pointer;transition:all .3s ease;font-weight:500;position:relative}
+  .tab:hover{background:var(--chip);color:var(--text);transform:translateY(-2px)}
+  .tab.active{background:var(--gradient-primary);color:white;box-shadow:var(--shadow);transform:translateY(-2px)}
+  .tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:3px;background:white;border-radius:3px 3px 0 0}
+  .container{max-width:1400px;margin:24px auto;padding:0 24px 48px}
+  .grid{display:grid;grid-template-columns:300px 1fr;gap:24px}
+  @media (max-width:960px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);transition:transform .3s,box-shadow .3s;overflow:hidden}
+  .card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+  .card h3{margin:0;padding:20px;border-bottom:2px solid var(--border);font-size:18px;font-weight:700;background:linear-gradient(to right,var(--panel-2),var(--panel));position:relative}
+  .card h3::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gradient-primary)}
+  .section{padding:16px}
+  .stack{display:flex;flex-direction:column;gap:16px}
+  .row{display:flex;gap:16px;flex-wrap:wrap}
+  input,select,button,textarea{font:inherit;transition:all .2s}
+  .input,.select{flex:1;min-width:180px;background:var(--panel);border:2px solid var(--border);color:var(--text);padding:12px 16px;border-radius:var(--radius);outline:0;transition:all .3s ease;font-weight:500}
+  .input:focus,.select:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(99,102,241,.1);transform:translateY(-1px)}
+  .input:hover,.select:hover{border-color:var(--muted)}
+  .btn{background:var(--gradient-primary);border:none;color:white;padding:12px 24px;border-radius:var(--radius);cursor:pointer;font-weight:600;transition:all .3s ease;box-shadow:0 4px 6px -1px rgba(102,126,234,0.3);position:relative;overflow:hidden}
+  .btn::before{content:'';position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;background:rgba(255,255,255,0.3);transform:translate(-50%,-50%);transition:width .6s,height .6s}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 15px -3px rgba(102,126,234,0.4)}
+  .btn:hover::before{width:300px;height:300px}
+  .btn:active{transform:translateY(0)}
+  .btn.secondary{background:var(--muted);box-shadow:0 4px 6px -1px rgba(100,116,139,0.3)}
+  .btn.green{background:var(--gradient-success);box-shadow:0 4px 6px -1px rgba(16,185,129,0.3)}
+  .btn.warn{background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);color:white;box-shadow:0 4px 6px -1px rgba(251,191,36,0.3)}
+  .btn.red{background:var(--gradient-danger);box-shadow:0 4px 6px -1px rgba(239,68,68,0.3)}
+  .btn:disabled{opacity:.6;cursor:not-allowed}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{padding:8px 16px;border-radius:20px;background:var(--chip);border:1px solid var(--border);color:var(--muted);font-weight:600;font-size:13px;transition:all .2s}
+  .chip:hover{transform:scale(1.05);box-shadow:var(--shadow)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:12px 16px;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);text-align:left;background:var(--panel-2);font-weight:600;position:sticky;top:0}
+  tbody tr{transition:all .2s ease}
+  tbody tr:hover{background:var(--panel-2);transform:scale(1.01);box-shadow:0 2px 4px rgba(0,0,0,0.05)}
+  .muted{color:var(--muted)}
+  .right{text-align:right}
+  .mono{font-family:SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+  .badge{padding:6px 12px;border-radius:20px;border:none;background:var(--gradient-primary);color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;box-shadow:0 2px 4px rgba(102,126,234,0.3)}
+  .status{padding:4px 12px;border-radius:20px;font-weight:700;font-size:12px;display:inline-block}
+  .status.ok{background:rgba(16,185,129,0.1);color:var(--good)}
+  .status.low{background:rgba(251,191,36,0.1);color:var(--warn)}
+  .status.out{background:rgba(239,68,68,0.1);color:var(--danger)}
+  .split{display:grid;grid-template-columns:1fr 460px;gap:24px}
+  @media (max-width:1100px){.split{grid-template-columns:1fr}}
+  .totals{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .totals .kpi{background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .3s;position:relative;overflow:hidden}
+  .totals .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--gradient-primary);opacity:0;transition:opacity .3s}
+  .totals .kpi:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+  .totals .kpi:hover::before{opacity:1}
+  .kpi h4{margin:0 0 12px 0;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+  .kpi .val{font-size:28px;font-weight:700;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--chip)}
+  .link{color:var(--accent);text-decoration:none;cursor:pointer}
+  .link:hover{text-decoration:underline}
+  .footer{margin-top:24px;color:var(--muted);font-size:14px;text-align:center}
+  .table-container{overflow-x:auto}
+  .modal-backdrop{display:none;position:fixed;z-index:100;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.6)}
+  .modal-content{background-color:var(--panel);color:var(--text);margin:10% auto;padding:24px;border:1px solid var(--border);width:80%;max-width:600px;border-radius:var(--radius);box-shadow:0 5px 15px rgba(0,0,0,0.5)}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:16px}
+  .modal-header h2{margin:0;font-size:22px}
+  .modal-close{color:var(--muted);font-size:32px;font-weight:bold;cursor:pointer;transition:color .2s}
+  .modal-close:hover,.modal-close:focus{color:var(--text);text-decoration:none}
+  .modal-body{background-color:var(--bg);padding:16px;border-radius:4px;border:1px solid var(--border);overflow-x:auto;color:var(--text)}
+  .modal-footer{display:flex;justify-content:flex-end;gap:12px;padding-top:16px;margin-top:16px;border-top:1px solid var(--border)}
+  @media print {
+    @page {
+      size: A4;
+      margin: 0.5in;
+    }
+    body * {
+      visibility: hidden;
+    }
+    #preview-content, #preview-content * {
+      visibility: visible;
+    }
+    #preview-content {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+    /* Ensure good print quality */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      color-adjust: exact !important;
+    }
+  }
+</style>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+<script src="firebase.js"></script>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <div class="logo">C</div>
+      <h1>Clothix – Multi‑Store</h1>
+      <span class="chip">GST-ready</span>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="toolbar">
+      <button class="btn" id="theme-toggle">🌙</button>
+      <button class="btn secondary" id="exportBtn">Export</button>
+      <button class="btn secondary" id="importBtn">Import</button>
+      <button class="btn" id="demoBtn">Load Demo</button>
+      <button class="btn red" id="resetBtn">Reset</button>
+      <div id="user-controls" class="toolbar"></div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div id="view"></div>
+  <div class="footer">Variant matrix (size/color), per‑store stock, transfers, and GST fields included. Use barcode/SKU lookup in POS. Data is stored locally in your browser. For e‑invoice/e‑way bill, integrate with your chosen provider’s API server‑side. [Info labels inspired by ecommerce templates.]</div>
+</div>
+
+<div id="print-modal" class="modal-backdrop">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Print Preview</h2>
+      <span id="close-modal" class="modal-close">&times;</span>
+    </div>
+    <div id="preview-content" class="modal-body"></div>
+    <div class="modal-footer">
+      <button id="cancel-btn" class="btn secondary">Cancel</button>
+      <button id="print-btn" class="btn green">Print</button>
+    </div>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+/* ====== Data Model (localStorage) ======
+stores: [{id,name,code,address,phone}]
+products: [{id,sku,style,name,brand,category,hsn,taxPct,sizes[],colors[],mrp,price,barcode,attributes,variants:[{size,color,sku,barcode}]}]
+stock: [{storeId, productId, size, color, qty, min}]
+customers: [{id,name,phone,gstin,address}]
+invoices: [{id, date, time, storeId, number, customerId, items:[{productId,size,color,qty,price,taxPct,discount}], totals:{sub,tax,total,round}, payments:{mode,amount}, notes}]
+transfers: [{id,date,fromStore,toStore,items:[{productId,size,color,qty}], note}]
+purchases: [{id,date,storeId,ref,items:[{productId,size,color,qty,cost}], note}]
+======================================== */
+const DBKEY='clothix.db.v1';
+const $ = sel => document.querySelector(sel);
+const $$ = sel => Array.from(document.querySelectorAll(sel));
+let db = load() || initDB();
+
+function initDB() {
+  return {
+    stores: [],
+    products: [],
+    stock: [],
+    customers: [],
+    invoices: [],
+    transfers: [],
+    purchases: [],
+    users: [],
+    seq: {inv:1,trn:1,pur:1}
+  };
+}
+
+async function save() {
+  try {
+    await database.ref('db').set(db);
+  } catch (error) {
+    console.error("Error saving to Firebase:", error);
+  }
+}
+
+async function load() {
+  try {
+    const snapshot = await database.ref('db').once('value');
+    let data = snapshot.val();
+    if (!data) {
+      return initDB();
+    }
+    // Ensure all expected arrays exist
+    data.stores = data.stores || [];
+    data.products = data.products || [];
+    data.stock = data.stock || [];
+    data.customers = data.customers || [];
+    data.invoices = data.invoices || [];
+    data.transfers = data.transfers || [];
+    data.purchases = data.purchases || [];
+    data.users = data.users || [];
+    data.seq = data.seq || {inv:1,trn:1,pur:1};
+    return data;
+  } catch (error) {
+    console.error("Error loading from Firebase:", error);
+    return initDB();
+  }
+}
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function today(){ const d=new Date(); return d.toISOString().slice(0,10); }
+
+/* ====== Navigation ====== */
+const sections = [
+  {id:'dashboard',label:'Dashboard', icon: '📊'},
+  {id:'stores',label:'Stores', icon: '🏪'},
+  {id:'catalog',label:'Products', icon: '📦'},
+  {id:'stock',label:'Inventory', icon: '📝'},
+  {id:'purchase',label:'Purchase', icon: '📥'},
+  {id:'transfer',label:'Transfer', icon: '✈️'},
+  {id:'pos',label:'POS Billing', icon: '🛒'},
+  {id:'returns',label:'Returns', icon: '↩️'},
+  {id:'customers',label:'Customers', icon: '👥'},
+  {id:'users',label:'Users', icon: '👤'},
+  {id:'reports',label:'Reports', icon: '📈'},
+  {id:'settings',label:'Settings', icon: '⚙️'}
+];
+const tabsEl = $('#tabs');
+sections.forEach(s=>{
+  const b=document.createElement('button');
+  b.innerHTML = `${s.icon} ${s.label}`; b.className='tab'; b.onclick=()=>open(s.id);
+  b.dataset.id=s.id; tabsEl.appendChild(b);
+});
+function setActive(id){ $$('#tabs .tab').forEach(t=>t.classList.toggle('active',t.dataset.id===id)); }
+function open(id){
+  console.log(`Opening section: ${id}`);
+  setActive(id);
+  const v=$('#view'); v.innerHTML='';
+  const renderers = {
+    dashboard: renderDashboard,
+    stores: renderStores,
+    catalog: renderCatalog,
+    stock: renderStock,
+    purchase: renderPurchase,
+    transfer: renderTransfer,
+    pos: renderPOS,
+    returns: renderReturns,
+    customers: renderCustomers,
+    users: renderUsers,
+    reports: renderReports,
+    settings: renderSettings
+  };
+  console.log('Available renderers:', renderers);
+  const render = renderers[id];
+  if (typeof render === 'function') {
+    render(v);
+  } else {
+    console.error(`No render function for id: ${id}`);
+  }
+}
+
+function renderLoginScreen() {
+  const viewElement = $('#view');
+  if (!viewElement) return;
+  
+  viewElement.innerHTML = `
+    <div class="card" style="max-width: 400px; margin: 48px auto;">
+      <h3>Login / Sign Up</h3>
+      <div class="section stack">
+        <input id="email" type="email" class="input" placeholder="Email">
+        <input id="password" type="password" class="input" placeholder="Password">
+        <div class="row">
+          <button id="loginBtn" class="btn">Login</button>
+          <button id="signupBtn" class="btn secondary">Sign Up</button>
+        </div>
+        <div id="authMessage" class="muted" style="margin-top: 8px;"></div>
+      </div>
+    </div>
+  `;
+  
+  const loginBtn = $('#loginBtn');
+  const signupBtn = $('#signupBtn');
+  const authMessage = $('#authMessage');
+  
+  if (loginBtn) {
+    loginBtn.onclick = async () => {
+      try {
+        const emailInput = $('#email');
+        const passwordInput = $('#password');
+        if (emailInput && passwordInput) {
+          await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
+          authMessage.textContent = 'Login successful!';
+          authMessage.style.color = 'var(--good)';
+        }
+      } catch (error) {
+        authMessage.textContent = error.message;
+        authMessage.style.color = 'var(--danger)';
+      }
+    };
+  }
+  
+  if (signupBtn) {
+    signupBtn.onclick = async () => {
+      try {
+        const emailInput = $('#email');
+        const passwordInput = $('#password');
+        if (emailInput && passwordInput) {
+          await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
+          authMessage.textContent = 'Account created successfully!';
+          authMessage.style.color = 'var(--good)';
+        }
+      } catch (error) {
+        authMessage.textContent = error.message;
+        authMessage.style.color = 'var(--danger)';
+      }
+    };
+  }
+}
+
+auth.onAuthStateChanged(async user => {
+  const userControls = $('#user-controls');
+  const tabsElement = $('#tabs');
+  
+  if (user) {
+    // User is signed in
+    if (tabsElement) tabsElement.style.display = 'flex';
+    
+    if (userControls) {
+      userControls.innerHTML = '';
+      const userDisplay = document.createElement('span');
+      userDisplay.className = 'chip';
+      userDisplay.textContent = user.email;
+
+      const logoutBtn = document.createElement('button');
+      logoutBtn.className = 'btn secondary';
+      logoutBtn.textContent = 'Logout';
+      logoutBtn.onclick = () => auth.signOut();
+
+      userControls.append(userDisplay, logoutBtn);
+    }
+    
+    try {
+      db = await load();
+      open('dashboard');
+    } catch (error) {
+      console.error('Error loading data:', error);
+      alert('Error loading data. Starting with empty database.');
+      db = initDB();
+      open('dashboard');
+    }
+  } else {
+    // User is signed out
+    renderLoginScreen();
+    if (tabsElement) tabsElement.style.display = 'none';
+  }
+});
+
+(async () => {
+  // Auth state listener will handle initialization
+})();
+
+
+/* ====== Helpers ====== */
+function money(n){ return (n||0).toFixed(2); }
+function getStore(id){ return db.stores.find(s=>s.id===id); }
+function getProduct(id){ return db.products.find(p=>p.id===id); }
+function findVariant(p,size,color){ return (p.variants||[]).find(v=>v.size===size && v.color===color); }
+function stockQty(storeId, productId, size, color){
+  const r = db.stock.find(s=>s.storeId===storeId && s.productId===productId && s.size===size && s.color===color);
+  return r? r.qty : 0;
+}
+function adjustStock(storeId, productId, size, color, delta){
+  let r = db.stock.find(s=>s.storeId===storeId && s.productId===productId && s.size===size && s.color===color);
+  if(!r){ r={storeId,productId,size,color,qty:0,min:0}; db.stock.push(r); }
+  r.qty = Math.max(0, (r.qty||0) + delta);
+}
+
+function printInvoice(inv) {
+    const modal = document.getElementById('print-modal');
+    const previewContent = document.getElementById('preview-content');
+    const closeModal = document.getElementById('close-modal');
+    const printBtn = document.getElementById('print-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+
+    const st = getStore(inv.storeId);
+    previewContent.innerHTML = formatInvoice(inv, st);
+    modal.style.display = 'block';
+
+    closeModal.onclick = () => {
+        modal.style.display = 'none';
+    };
+
+    cancelBtn.onclick = () => {
+        modal.style.display = 'none';
+    };
+
+    printBtn.onclick = () => {
+        window.print();
+        modal.style.display = 'none';
+    };
+
+    window.onclick = (event) => {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+}
+function formatInvoice(inv, store) {
+    const cust = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
+    let html = `
+        <div style="font-family: Arial, sans-serif; font-size: 14pt; color: black; width: 100%; max-width: 800px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; border-bottom: 3px double #000; padding-bottom: 15px; margin-bottom: 15px;">
+                <h2 style="margin: 0 0 10px 0; font-size: 24pt; font-weight: bold; text-transform: uppercase;">${store?.name || 'Clothix Retail'}</h2>
+                <p style="margin: 5px 0; font-size: 13pt;">${store?.address || ''}</p>
+                <p style="margin: 5px 0; font-size: 13pt;"><strong>Phone:</strong> ${store?.phone || ''}</p>
+                ${store?.code ? `<p style="margin: 5px 0; font-size: 12pt;"><strong>Store Code:</strong> ${store.code}</p>` : ''}
+            </div>
+            
+            <div style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px;">
+                <table style="width: 100%; font-size: 13pt;">
+                    <tr>
+                        <td style="padding: 5px;"><strong>Invoice #:</strong></td>
+                        <td style="padding: 5px; text-align: right; font-weight: bold; font-size: 14pt;">${inv.number}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 5px;"><strong>Date & Time:</strong></td>
+                        <td style="padding: 5px; text-align: right;">${inv.date} ${inv.time}</td>
+                    </tr>
+                    ${cust ? `
+                    <tr>
+                        <td style="padding: 5px;"><strong>Customer:</strong></td>
+                        <td style="padding: 5px; text-align: right;">${cust.name}</td>
+                    </tr>
+                    ${cust.phone ? `<tr><td style="padding: 5px;"><strong>Phone:</strong></td><td style="padding: 5px; text-align: right;">${cust.phone}</td></tr>` : ''}
+                    ${cust.gstin ? `<tr><td style="padding: 5px;"><strong>GSTIN:</strong></td><td style="padding: 5px; text-align: right;">${cust.gstin}</td></tr>` : ''}
+                    ` : '<tr><td colspan="2" style="padding: 5px; text-align: center; font-style: italic;">Walk-in Customer</td></tr>'}
+                </table>
+            </div>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13pt;">
+                <thead>
+                    <tr style="background: #333; color: white;">
+                        <th style="text-align: left; padding: 12px 8px; border-bottom: 2px solid #000;">Item</th>
+                        <th style="text-align: center; padding: 12px 8px; border-bottom: 2px solid #000;">Qty</th>
+                        <th style="text-align: right; padding: 12px 8px; border-bottom: 2px solid #000;">Price</th>
+                        ${inv.items.some(it => it.discount > 0) ? '<th style="text-align: right; padding: 12px 8px; border-bottom: 2px solid #000;">Disc%</th>' : ''}
+                        <th style="text-align: right; padding: 12px 8px; border-bottom: 2px solid #000;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    inv.items.forEach((it, idx) => {
+        const p = getProduct(it.productId) || {};
+        const base = (it.price || 0) * (it.qty || 0);
+        const disc = base * (it.discount || 0) / 100;
+        const lineTotal = base - disc;
+        const bgColor = idx % 2 === 0 ? '#fff' : '#f9f9f9';
+        html += `
+            <tr style="background: ${bgColor};">
+                <td style="padding: 10px 8px; border-bottom: 1px solid #ddd;">
+                    <strong>${p.name || 'N/A'}</strong><br>
+                    <span style="font-size: 11pt; color: #666;">Size: ${it.size} | Color: ${it.color}</span>
+                    ${p.sku ? `<br><span style="font-size: 10pt; color: #999;">SKU: ${p.sku}</span>` : ''}
+                </td>
+                <td style="text-align: center; padding: 10px 8px; border-bottom: 1px solid #ddd; font-weight: bold;">${it.qty}</td>
+                <td style="text-align: right; padding: 10px 8px; border-bottom: 1px solid #ddd;">₹${money(it.price)}</td>
+                ${inv.items.some(it => it.discount > 0) ? `<td style="text-align: right; padding: 10px 8px; border-bottom: 1px solid #ddd;">${it.discount > 0 ? it.discount + '%' : '-'}</td>` : ''}
+                <td style="text-align: right; padding: 10px 8px; border-bottom: 1px solid #ddd; font-weight: bold;">₹${money(lineTotal)}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+            </table>
+            
+            <div style="margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 8px;">
+                <table style="width: 100%; font-size: 14pt;">
+                    <tr>
+                        <td style="padding: 8px; text-align: right;"><strong>Subtotal:</strong></td>
+                        <td style="padding: 8px; text-align: right; width: 150px;">₹ ${money(inv.totals.sub)}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px; text-align: right;"><strong>Tax (GST):</strong></td>
+                        <td style="padding: 8px; text-align: right;">₹ ${money(inv.totals.tax)}</td>
+                    </tr>
+                    ${inv.totals.round !== 0 ? `
+                    <tr>
+                        <td style="padding: 8px; text-align: right;"><strong>Rounding:</strong></td>
+                        <td style="padding: 8px; text-align: right;">₹ ${money(inv.totals.round)}</td>
+                    </tr>
+                    ` : ''}
+                    <tr style="border-top: 2px solid #000; background: #333; color: white;">
+                        <td style="padding: 12px; text-align: right; font-size: 16pt;"><strong>GRAND TOTAL:</strong></td>
+                        <td style="padding: 12px; text-align: right; font-size: 18pt; font-weight: bold;">₹ ${money(inv.totals.total)}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="margin: 20px 0; padding: 15px; background: #fffbea; border-left: 4px solid #ffc107; border-radius: 4px;">
+                <p style="margin: 0; font-size: 13pt;"><strong>Payment Mode:</strong> ${inv.payments.mode}</p>
+                ${inv.payments.amount ? `<p style="margin: 5px 0 0 0; font-size: 13pt;"><strong>Amount Paid:</strong> ₹${money(inv.payments.amount)}</p>` : ''}
+            </div>
+            
+            ${inv.notes ? `
+            <div style="margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 4px;">
+                <p style="margin: 0; font-size: 12pt;"><strong>Notes:</strong> ${inv.notes}</p>
+            </div>
+            ` : ''}
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px dashed #999;">
+                <p style="margin: 10px 0; font-size: 16pt; font-weight: bold;">Thank You for Shopping!</p>
+                <p style="margin: 5px 0; font-size: 12pt; color: #666;">Please visit again</p>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center; font-size: 10pt; color: #999;">
+                <p style="margin: 5px 0;">GST Invoice | Goods once sold cannot be returned or exchanged</p>
+            </div>
+        </div>
+    `;
+    return html;
+}
+
+/* ====== Dashboard ====== */
+function renderDashboard(root){
+  const totalStyles = db.products.length;
+  const totalStores = db.stores.length;
+  const totalQty = db.stock.reduce((a,s)=>a+s.qty,0);
+  const todaySales = db.invoices.filter(inv=>inv.date===today()).reduce((a,inv)=>a+(inv.totals?.total||0),0);
+  root.innerHTML = `
+    <div class="grid">
+      <div class="card">
+        <h3>Filters</h3>
+        <div class="section stack">
+          <div class="chips">
+            <span class="chip">Today ${today()}</span>
+            <span class="chip">Stores ${totalStores}</span>
+            <span class="chip">Styles ${totalStyles}</span>
+          </div>
+          <div class="stack">
+            <div class="row">
+              <select class="select" id="dashStore">
+                <option value="">All Stores</option>
+                ${db.stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+              </select>
+              <input class="input" id="dashQuery" placeholder="Search style/sku/brand">
+            </div>
+            <div class="row">
+              <button class="btn" id="dashRefresh">Refresh</button>
+              <a class="pill link" href="javascript:void(0)" id="toPOS">Go to POS</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Overview</h3>
+        <div class="section">
+          <div class="totals">
+            <div class="kpi"><h4>Today Sales</h4><div class="val mono">₹ ${money(todaySales)}</div></div>
+            <div class="kpi"><h4>Total Qty</h4><div class="val mono">${totalQty}</div></div>
+            <div class="kpi"><h4>Stores</h4><div class="val mono">${totalStores}</div></div>
+            <div class="kpi"><h4>Styles</h4><div class="val mono">${totalStyles}</div></div>
+          </div>
+        </div>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Low Stock</th><th>Store</th><th>Style</th><th>Variant</th><th class="right">Qty</th></tr></thead>
+              <tbody id="lowBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  $('#dashRefresh').onclick = fillLow;
+  $('#toPOS').onclick = ()=>open('pos');
+  fillLow();
+  function fillLow(){
+    const storeId = $('#dashStore').value || null;
+    const q = ($('#dashQuery').value||'').toLowerCase();
+    const lows = db.stock.filter(s=>{
+      if(storeId && s.storeId!==storeId) return false;
+      const p=getProduct(s.productId)||{};
+      const hit = [p.name,p.sku,p.brand].filter(Boolean).join(' ').toLowerCase().includes(q);
+      const isLow = (s.min||0)>0 && s.qty<=s.min;
+      return hit && isLow;
+    });
+    const body = $('#lowBody');
+    body.innerHTML = lows.map(s=>{
+      const st=getStore(s.storeId); const p=getProduct(s.productId)||{};
+      return `<tr><td><span class="status low">Low</span></td><td>${st?.name||'-'}</td><td>${p.name||'-'}</td><td>${s.size||''}/${s.color||''}</td><td class="right">${s.qty}</td></tr>`;
+    }).join('') || `<tr><td colspan="5" class="muted">No low stock.</td></tr>`;
+  }
+}
+
+/* ====== Stores ====== */
+function renderStores(root){
+  root.innerHTML = `
+    <div class="grid">
+      <div class="card">
+        <h3>Add / Edit Store</h3>
+        <div class="section stack">
+          <input id="stName" class="input" placeholder="Store name">
+          <div class="row">
+            <input id="stCode" class="input" placeholder="Code (e.g., BLR-01)">
+            <input id="stPhone" class="input" placeholder="Phone">
+          </div>
+          <textarea id="stAddr" class="input" rows="3" placeholder="Address"></textarea>
+          <div class="row">
+            <button class="btn" id="stAdd">Save Store</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Stores</h3>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Name</th><th>Code</th><th>Phone</th><th>Address</th><th></th></tr></thead>
+              <tbody id="stBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  $('#stAdd').onclick=async ()=>{
+    const s={id:uid(),name:$('#stName').value.trim(),code:$('#stCode').value.trim(),phone:$('#stPhone').value.trim(),address:$('#stAddr').value.trim()};
+    if(!s.name) return alert('Store name is required');
+    db.stores.push(s); await save(); renderStores(root);
+  };
+  const body=$('#stBody');
+  body.innerHTML = db.stores.map(s=>`
+    <tr><td>${s.name}</td><td>${s.code||''}</td><td>${s.phone||''}</td><td>${s.address||''}</td>
+    <td class="right"><button class="btn red" data-id="${s.id}">Delete</button></td></tr>
+  `).join('') || `<tr><td colspan="5" class="muted">No stores yet.</td></tr>`;
+  body.querySelectorAll('.btn.red').forEach(b=>{
+    b.onclick=async ()=>{ const id=b.dataset.id; if(confirm('Delete store?')){ db.stores=db.stores.filter(x=>x.id!==id); db.stock=db.stock.filter(x=>x.storeId!==id); await save(); renderStores(root);} };
+  });
+}
+
+/* ====== Catalog (Products with Variants) ====== */
+function renderCatalog(root){
+  const sizesDefault = 'XS,S,M,L,XL,XXL';
+  root.innerHTML = `
+    <div class="card">
+      <h3>New Product (Style)</h3>
+      <div class="section stack">
+        <div class="row">
+          <input class="input" id="pName" placeholder="Name (e.g., Polo T-Shirt)">
+          <input class="input" id="pStyle" placeholder="Style Code">
+          <input class="input" id="pBrand" placeholder="Brand">
+        </div>
+        <div class="row">
+          <input class="input" id="pSKU" placeholder="Master SKU">
+          <input class="input" id="pBarcode" placeholder="Barcode (master)">
+          <input class="input" id="pHSN" placeholder="HSN/SAC">
+          <input class="input" id="pTax" placeholder="GST % (e.g., 5, 12)">
+        </div>
+        <div class="row">
+          <input class="input" id="pCategory" placeholder="Category (e.g., Men > Tees)">
+          <input class="input" id="pMRP" placeholder="MRP">
+          <input class="input" id="pPrice" placeholder="Sale Price">
+        </div>
+        <div class="row">
+          <input class="input" id="pSizes" placeholder="Sizes (comma separated)" value="${sizesDefault}">
+          <input class="input" id="pColors" placeholder="Colors (comma separated)">
+        </div>
+        <div class="row">
+          <button class="btn" id="genVar">Generate Variants</button>
+          <button class="btn green" id="saveProd">Save Product</button>
+        </div>
+        <div id="varPreview" class="stack"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Product List</h3>
+      <div class="section">
+        <div class="row">
+          <input class="input" id="pQuery" placeholder="Search name/sku/brand/category">
+          <button class="btn" id="pFind">Search</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="table-container">
+          <table>
+            <thead><tr><th>Name</th><th>Brand</th><th>SKU</th><th>Tax%</th><th>Variants</th><th></th></tr></thead>
+            <tbody id="pBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+  let currentVariants=[];
+  $('#genVar').onclick=()=>{
+    const sizes = ($('#pSizes').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const colors = ($('#pColors').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const skuMaster = $('#pSKU').value.trim() || 'SKU';
+    const barcodeMaster = $('#pBarcode').value.trim();
+    currentVariants = [];
+    sizes.forEach(s=>{
+      colors.forEach(c=>{
+        currentVariants.push({size:s,color:c,sku:`${skuMaster}-${s}-${c}`.toUpperCase(),barcode:barcodeMaster? `${barcodeMaster}${s}${c}`:''});
+      });
+    });
+    const prev = $('#varPreview');
+    prev.innerHTML = currentVariants.length? `
+      <div class="chips"><span class="chip">Generated ${currentVariants.length} variants</span></div>
+      <div class="table-container">
+        <table><thead><tr><th>Size</th><th>Color</th><th>SKU</th><th>Barcode</th></tr></thead>
+        <tbody>${currentVariants.map(v=>`<tr><td>${v.size}</td><td>${v.color}</td><td class="mono">${v.sku}</td><td class="mono">${v.barcode||''}</td></tr>`).join('')}</tbody></table>
+      </div>
+    ` : `<div class="muted">Add sizes & colors to generate variants.</div>`;
+  };
+  $('#saveProd').onclick=async ()=>{
+    const p={
+      id:uid(),
+      name:$('#pName').value.trim(),
+      style:$('#pStyle').value.trim(),
+      brand:$('#pBrand').value.trim(),
+      sku:$('#pSKU').value.trim(),
+      barcode:$('#pBarcode').value.trim(),
+      hsn:$('#pHSN').value.trim(),
+      taxPct: +($('#pTax').value||0),
+      category:$('#pCategory').value.trim(),
+      mrp:+($('#pMRP').value||0),
+      price:+($('#pPrice').value||0),
+      sizes:($('#pSizes').value||'').split(',').map(s=>s.trim()).filter(Boolean),
+      colors:($('#pColors').value||'').split(',').map(s=>s.trim()).filter(Boolean),
+      attributes:{},
+      variants: currentVariants
+    };
+    if(!p.name) return alert('Product name is required');
+    db.products.push(p); await save(); alert('Product saved'); renderCatalog(root);
+  };
+  function fillList(){
+    const q=($('#pQuery').value||'').toLowerCase();
+    const body=$('#pBody');
+    const rows = db.products.filter(p=>{
+      return [p.name,p.sku,p.brand,p.category].join(' ').toLowerCase().includes(q);
+    }).map(p=>{
+      return `<tr>
+        <td>${p.name}</td><td>${p.brand||''}</td><td class="mono">${p.sku||''}</td><td>${p.taxPct||0}</td>
+        <td><span class="badge">${(p.variants||[]).length} variants</span></td>
+        <td class="right"><button class="btn red" data-id="${p.id}">Delete</button></td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="6" class="muted">No products.</td></tr>`;
+    body.innerHTML = rows;
+    body.querySelectorAll('.btn.red').forEach(b=>{
+      b.onclick=async ()=>{ const id=b.dataset.id; if(confirm('Delete product and stock?')){ db.products=db.products.filter(x=>x.id!==id); db.stock=db.stock.filter(x=>x.productId!==id); await save(); fillList(); } };
+    });
+  }
+  $('#pFind').onclick=fillList; fillList();
+}
+
+/* ====== Inventory ====== */
+function renderStock(root){
+  root.innerHTML = `
+    <div class="card">
+      <h3>Inventory by Variant</h3>
+      <div class="section">
+        <div class="row">
+          <select class="select" id="sStore">
+            <option value="">All Stores</option>
+            ${db.stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+          </select>
+          <input class="input" id="sQuery" placeholder="Search product/sku/brand">
+          <button class="btn" id="sFind">Search</button>
+        </div>
+      </div>
+      <div class="section">
+        <div class="table-container">
+          <table>
+            <thead><tr><th>Store</th><th>Product</th><th>Variant</th><th class="right">Qty</th><th class="right">Min</th><th></th></tr></thead>
+            <tbody id="sBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+  function fill(){
+    const storeId=$('#sStore').value||'';
+    const q=($('#sQuery').value||'').toLowerCase();
+    const rows = db.stock.filter(r=>{
+      const okStore = storeId? r.storeId===storeId : true;
+      const p=getProduct(r.productId)||{};
+      const okQ = [p.name,p.sku,p.brand].join(' ').toLowerCase().includes(q);
+      return okStore && okQ;
+    }).map(r=>{
+      const st=getStore(r.storeId); const p=getProduct(r.productId)||{};
+      return `<tr>
+        <td>${st?.name||''}</td>
+        <td>${p?.name||''}</td>
+        <td>${r.size}/${r.color}</td>
+        <td class="right mono">${r.qty}</td>
+        <td class="right"><input data-key="min" data-id="${r.storeId}|${r.productId}|${r.size}|${r.color}" class="input" style="width:90px" value="${r.min||0}"></td>
+        <td class="right"><button class="btn warn" data-id="${r.storeId}|${r.productId}|${r.size}|${r.color}">Set Min</button></td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="6" class="muted">No stock yet.</td></tr>`;
+    $('#sBody').innerHTML = rows;
+    $('#sBody').querySelectorAll('.btn.warn').forEach(b=>{
+      b.onclick=async ()=>{
+        const [storeId,productId,size,color]=b.dataset.id.split('|');
+        const inp=$(`#sBody input[data-id="${b.dataset.id}"]`);
+        const val=+inp.value||0;
+        const r=db.stock.find(x=>x.storeId===storeId && x.productId===productId && x.size===size && x.color===color);
+        if(r){ r.min=val; await save(); alert('Min updated'); }
+      };
+    });
+  }
+  $('#sFind').onclick=fill; fill();
+}
+
+/* ====== Purchase (Receive Stock) ====== */
+function renderPurchase(root){
+  root.innerHTML = `
+    <div class="split">
+      <div class="card">
+        <h3>Receive Stock</h3>
+        <div class="section stack">
+          <div class="row">
+            <select class="select" id="puStore">
+              <option value="">Select Store</option>
+              ${db.stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+            </select>
+            <input class="input" id="puRef" placeholder="Supplier Bill/Ref">
+            <input class="input" id="puDate" type="date" value="${today()}">
+          </div>
+          <div class="row">
+            <input class="input" id="puSearch" placeholder="Search product by name/sku">
+            <button class="btn" id="puAdd">Add Line</button>
+          </div>
+          <div class="section">
+            <div class="table-container">
+              <table>
+                <thead><tr><th>Product</th><th>Variant</th><th>Qty</th><th>Cost</th><th></th></tr></thead>
+                <tbody id="puBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="row">
+            <button class="btn green" id="puSave">Post Receipt</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Quick Pick</h3>
+        <div class="section" id="puPick"></div>
+      </div>
+    </div>
+  `;
+  const lines=[];
+  function refreshLines(){
+    $('#puBody').innerHTML = lines.map((ln,i)=>`
+      <tr>
+        <td>${getProduct(ln.productId)?.name||''}</td>
+        <td>${ln.size}/${ln.color}</td>
+        <td><input class="input" style="width:90px" value="${ln.qty}" data-i="${i}" data-k="qty"></td>
+        <td><input class="input" style="width:110px" value="${ln.cost}" data-i="${i}" data-k="cost"></td>
+        <td class="right"><button class="btn red" data-i="${i}">Remove</button></td>
+      </tr>
+    `).join('') || `<tr><td colspan="5" class="muted">Use Quick Pick or Add Line.</td></tr>`;
+    $('#puBody').querySelectorAll('input').forEach(inp=>{
+      inp.oninput=()=>{ const i=+inp.dataset.i; const k=inp.dataset.k; lines[i][k]= +inp.value||0; };
+    });
+    $('#puBody').querySelectorAll('.btn.red').forEach(btn=>{
+      btn.onclick=()=>{ const i=+btn.dataset.i; lines.splice(i,1); refreshLines(); };
+    });
+  }
+  function refreshPick(){
+    const q=($('#puSearch').value||'').toLowerCase();
+    const html = db.products.filter(p=>[p.name,p.sku,p.brand].join(' ').toLowerCase().includes(q)).slice(0,50).map(p=>{
+      const variants = (p.variants&&p.variants.length? p.variants : [{size:'STD',color:'STD',sku:p.sku,barcode:p.barcode}]);
+      return `<div class="card" style="margin-bottom:8px">
+        <div class="section">
+          <div class="row" style="align-items:center;justify-content:space-between">
+            <div>
+              <div>${p.name} <span class="badge">${variants.length} variants</span></div>
+              <div class="muted mono">${p.brand||''} • ${p.sku||''} • GST ${p.taxPct||0}%</div>
+            </div>
+          </div>
+          <div class="chips" style="margin-top:8px">
+            ${variants.map(v=>`<button class="chip" data-p="${p.id}" data-size="${v.size}" data-color="${v.color}">${v.size}/${v.color}</button>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    }).join('') || `<div class="muted">No products.</div>`;
+    $('#puPick').innerHTML = html;
+    $('#puPick').querySelectorAll('.chip').forEach(ch=>{
+      ch.onclick=()=>{
+        const productId = ch.dataset.p, size=ch.dataset.size, color=ch.dataset.color;
+        lines.push({productId,size,color,qty:1,cost:0});
+        refreshLines();
+      };
+    });
+  }
+  $('#puAdd').onclick=refreshPick;
+  $('#puSearch').oninput=refreshPick;
+  $('#puSave').onclick=async ()=>{
+    const storeId=$('#puStore').value;
+    if(!storeId) return alert('Select store');
+    if(!lines.length) return alert('No lines');
+    const doc={id:uid(),date:$('#puDate').value,storeId,ref:$('#puRef').value.trim(),items:JSON.parse(JSON.stringify(lines)),note:''};
+    db.purchases.push(doc);
+    lines.forEach(ln=> adjustStock(storeId,ln.productId,ln.size,ln.color,+ln.qty));
+    await save(); alert('Receipt posted'); renderPurchase(root);
+  };
+  refreshPick(); refreshLines();
+}
+
+/* ====== Transfer ====== */
+function renderTransfer(root){
+  root.innerHTML = `
+    <div class="card">
+      <h3>Inter‑Store Transfer</h3>
+      <div class="section stack">
+        <div class="row">
+          <select class="select" id="tfFrom"><option value="">From Store</option>${db.stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>
+          <select class="select" id="tfTo"><option value="">To Store</option>${db.stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}</select>
+          <input class="input" id="tfDate" type="date" value="${today()}">
+        </div>
+        <div class="row">
+          <input class="input" id="tfSearch" placeholder="Search product">
+          <button class="btn" id="tfAdd">Add</button>
+        </div>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Product</th><th>Variant</th><th class="right">Avail</th><th>Qty</th><th></th></tr></thead>
+              <tbody id="tfBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn green" id="tfPost">Post Transfer</button>
+        </div>
+      </div>
+    </div>
+  `;
+  const lines=[];
+  function fillPick(){
+    // simple add via search: pick first 25 matched product variants
+    const q=($('#tfSearch').value||'').toLowerCase();
+    const matched = db.products.filter(p=>[p.name,p.sku,p.brand].join(' ').toLowerCase().includes(q)).slice(0,25);
+    if(!matched.length) return alert('No products match');
+    const p=matched[0];
+    const variants = p.variants?.length? p.variants : [{size:'STD',color:'STD'}];
+    variants.forEach(v=> lines.push({productId:p.id,size:v.size,color:v.color,qty:0}));
+    refreshLines();
+  }
+  function refreshLines(){
+    const from=$('#tfFrom').value||'';
+    $('#tfBody').innerHTML = lines.map((ln,i)=>{
+      const p=getProduct(ln.productId)||{};
+      const avail = from? stockQty(from,ln.productId,ln.size,ln.color) : 0;
+      return `<tr>
+        <td>${p.name||''}</td>
+        <td>${ln.size}/${ln.color}</td>
+        <td class="right mono">${avail}</td>
+        <td><input class="input" style="width:90px" value="${ln.qty}" data-i="${i}"></td>
+        <td class="right"><button class="btn red" data-i="${i}">Remove</button></td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="5" class="muted">Add lines to transfer.</td></tr>`;
+    $('#tfBody').querySelectorAll('input').forEach(inp=>{
+      inp.oninput=()=>{ lines[+inp.dataset.i].qty=+inp.value||0; };
+    });
+    $('#tfBody').querySelectorAll('.btn.red').forEach(b=>{
+      b.onclick=()=>{ lines.splice(+b.dataset.i,1); refreshLines(); };
+    });
+  }
+  $('#tfAdd').onclick=fillPick;
+  $('#tfSearch').onkeydown=(e)=>{ if(e.key==='Enter') fillPick(); };
+  $('#tfPost').onclick=async ()=>{
+    const from=$('#tfFrom').value, to=$('#tfTo').value;
+    if(!from||!to||from===to) return alert('Select different stores');
+    const items = lines.filter(l=>l.qty>0);
+    if(!items.length) return alert('No quantities');
+    items.forEach(ln=>{
+      const available = stockQty(from,ln.productId,ln.size,ln.color);
+      if(ln.qty>available) throw alert('Insufficient stock for some lines');
+    });
+    const doc={id:uid(),date:$('#tfDate').value,fromStore:from,toStore:to,items, note:''};
+    db.transfers.push(doc);
+    items.forEach(ln=>{
+      adjustStock(from,ln.productId,ln.size,ln.color,-ln.qty);
+      adjustStock(to,ln.productId,ln.size,ln.color,+ln.qty);
+    });
+    await save(); alert('Transfer posted'); renderTransfer(root);
+  };
+  refreshLines();
+}
+
+/* ====== POS Billing ====== */
+function renderPOS(root){
+  root.innerHTML = `
+    <div class="split">
+      <div class="card">
+        <h3>POS Billing</h3>
+        <div class="section stack">
+          <div class="row">
+            <select class="select" id="posStore">
+              ${db.stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+            </select>
+            <input class="input" id="posDate" type="date" value="${today()}">
+            <input class="input" id="posNumber" placeholder="Invoice No. (auto)">
+          </div>
+          <div class="row">
+            <input class="input" id="posScan" placeholder="Scan barcode / type SKU / search name">
+            <select class="select" id="posCustomer">
+              <option value="">Walk-in</option>
+              ${db.customers.map(c=>`<option value="${c.id}">${c.name} (${c.phone||''})</option>`).join('')}
+            </select>
+            <input class="input" id="posGSTIN" placeholder="Customer GSTIN (optional)">
+          </div>
+        </div>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead><tr><th>Item</th><th>Variant</th><th class="right">MRP</th><th class="right">Price</th><th class="right">Qty</th><th class="right">Tax%</th><th class="right">Disc%</th><th class="right">Line</th><th></th></tr></thead>
+              <tbody id="posBody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="section row">
+          <button class="btn warn" id="posClear">Clear</button>
+          <button class="btn green" id="posPay">Preview & Save</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Totals</h3>
+        <div class="section stack" id="posTotals"></div>
+        <div class="section">
+          <div class="row">
+            <select class="select" id="payMode">
+              <option>Cash</option><option>UPI</option><option>Card</option>
+            </select>
+            <input class="input" id="payAmt" placeholder="Amount">
+          </div>
+          <div class="row">
+            <textarea class="input" id="posNotes" rows="2" placeholder="Notes"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  const storeId = db.stores[0]?.id || '';
+  if($('#posStore')) $('#posStore').value = storeId;
+  const cart=[];
+  function addByQuery(q){
+    q = (q||'').trim();
+    if(!q) return;
+    // Try barcode/sku exact, else name contains
+    let match=null, variant=null;
+    for(const p of db.products){
+      if(p.barcode===q || p.sku===q){ match=p; break; }
+      if(!match){
+        for(const v of (p.variants||[])){
+          if(v.barcode===q || v.sku===q){ match=p; variant=v; break; }
+        }
+      }
+      if(match&&variant) break;
+    }
+    if(!match){
+      const list=db.products.filter(p=>[p.name,p.sku,p.brand].join(' ').toLowerCase().includes(q.toLowerCase()));
+      if(list.length) match=list[0];
+    }
+    if(!match){ alert('Item not found'); return; }
+    const v = variant || (match.variants?.[0] || {size:'STD',color:'STD'});
+    const existing = cart.find(it=>it.productId===match.id && it.size===v.size && it.color===v.color);
+    if(existing){ existing.qty+=1; }
+    else{
+      cart.push({
+        productId:match.id,
+        size:v.size,color:v.color,
+        mrp:match.mrp||0,
+        price:match.price||match.mrp||0,
+        qty:1,
+        taxPct:match.taxPct||0,
+        discount:0
+      });
+    }
+    $('#posScan').value='';
+    refreshCart();
+  }
+  function refreshCart(){
+    const stId=$('#posStore').value;
+    $('#posBody').innerHTML = cart.map((it,i)=>{
+      const p=getProduct(it.productId)||{};
+      const avail = stockQty(stId,it.productId,it.size,it.color);
+      const lineBase = it.price * it.qty;
+      const lineDisc = lineBase*(it.discount||0)/100;
+      const taxable = Math.max(0,lineBase - lineDisc);
+      const tax = taxable * (it.taxPct||0)/100;
+      const gross = taxable + tax;
+      return `<tr>
+        <td>${p.name||''}<div class="muted mono">${p.sku||''}</div></td>
+        <td>${it.size}/${it.color}<div class="muted">Avail ${avail}</div></td>
+        <td class="right mono">₹${money(it.mrp)}</td>
+        <td class="right"><input class="input" style="width:90px" value="${it.price}" data-i="${i}" data-k="price"></td>
+        <td class="right"><input class="input" style="width:70px" value="${it.qty}" data-i="${i}" data-k="qty"></td>
+        <td class="right"><input class="input" style="width:70px" value="${it.taxPct}" data-i="${i}" data-k="taxPct"></td>
+        <td class="right"><input class="input" style="width:70px" value="${it.discount}" data-i="${i}" data-k="discount"></td>
+        <td class="right mono">₹${money(gross)}</td>
+        <td class="right"><button class="btn red" data-i="${i}">X</button></td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="9" class="muted">Scan or search to add items.</td></tr>`;
+    $('#posBody').querySelectorAll('input').forEach(inp=>{
+      inp.oninput=()=>{
+        const i=+inp.dataset.i, k=inp.dataset.k;
+        cart[i][k]= +inp.value||0;
+        refreshTotals();
+      };
+    });
+    $('#posBody').querySelectorAll('.btn.red').forEach(b=>{
+      b.onclick=()=>{ cart.splice(+b.dataset.i,1); refreshCart(); };
+    });
+    refreshTotals();
+  }
+  function refreshTotals(){
+    let sub=0,tax=0;
+    cart.forEach(it=>{
+      const base = (it.price||0) * (it.qty||0);
+      const disc = base*(it.discount||0)/100;
+      const taxable = Math.max(0,base-disc);
+      sub += taxable;
+      tax += taxable*(it.taxPct||0)/100;
+    });
+    const total = sub+tax;
+    const r = Math.round(total) - total;
+    const grand = total + r;
+    $('#posTotals').innerHTML = `
+      <div class="totals">
+        <div class="kpi"><h4>Subtotal</h4><div class="val mono">₹ ${money(sub)}</div></div>
+        <div class="kpi"><h4>Tax</h4><div class="val mono">₹ ${money(tax)}</div></div>
+        <div class="kpi"><h4>Round Off</h4><div class="val mono">₹ ${money(r)}</div></div>
+        <div class="kpi"><h4>Grand Total</h4><div class="val mono">₹ ${money(grand)}</div></div>
+      </div>
+    `;
+    $('#payAmt').value = money(grand);
+  }
+  $('#posScan').addEventListener('keydown',e=>{ if(e.key==='Enter'){ addByQuery(e.target.value); } });
+  $('#posClear').onclick=()=>{ if(confirm('Clear cart?')){ cart.length=0; refreshCart(); } };
+  $('#posPay').onclick=async ()=>{
+    const stId=$('#posStore').value;
+    if(!stId) return alert('Select store');
+    if(!cart.length) return alert('Cart empty');
+    // stock check
+    for(const it of cart){
+      const avail=stockQty(stId,it.productId,it.size,it.color);
+      if((it.qty||0)>avail) return alert('Insufficient stock for '+(getProduct(it.productId)?.name||''));
+    }
+    // totals
+    let sub=0,tax=0;
+    cart.forEach(it=>{
+      const base = (it.price||0)*(it.qty||0);
+      const disc = base*(it.discount||0)/100;
+      const taxable = Math.max(0,base-disc);
+      sub+=taxable; tax+=taxable*(it.taxPct||0)/100;
+    });
+    const total=sub+tax; const r=Math.round(total)-total; const grand=total+r;
+    const invNo = $('#posNumber').value.trim() || `INV-${String(db.seq.inv++).padStart(5,'0')}`;
+    const inv = {
+      id:uid(),
+      date:$('#posDate').value,
+      time:new Date().toLocaleTimeString(),
+      storeId:stId,
+      number:invNo,
+      customerId:$('#posCustomer').value||'',
+      items: JSON.parse(JSON.stringify(cart)),
+      totals:{sub,tax,total:grand,round:r},
+      payments:{mode:$('#payMode').value,amount:+($('#payAmt').value||grand)},
+      notes:$('#posNotes').value.trim()
+    };
+    db.invoices.push(inv);
+    // stock adjust
+    cart.forEach(it=> adjustStock(stId,it.productId,it.size,it.color,-it.qty));
+    await save();
+    printInvoice(inv);
+    renderPOS(root);
+  };
+
+  refreshCart();
+}
+
+/* ====== Returns ====== */
+function renderReturns(root) {
+  root.innerHTML = `
+    <div class="card">
+      <h3>Exchange & Refund</h3>
+      <div class="section">
+        <div class="row">
+          <input class="input" id="returnInvSearch" placeholder="Enter Invoice Number">
+          <button class="btn" id="returnFindInv">Find Invoice</button>
+        </div>
+      </div>
+      <div id="returnInvDetails" class="section"></div>
+    </div>
+  `;
+
+  $('#returnFindInv').onclick = () => {
+    const invNumber = $('#returnInvSearch').value.trim();
+    if (!invNumber) return;
+
+    const invoice = db.invoices.find(inv => inv.number === invNumber);
+    const detailsContainer = $('#returnInvDetails');
+
+    if (invoice) {
+      const store = getStore(invoice.storeId);
+      detailsContainer.innerHTML = `
+        <h4>Invoice Details</h4>
+        <div class="chips">
+          <span class="chip">Invoice: ${invoice.number}</span>
+          <span class="chip">Date: ${invoice.date} ${invoice.time}</span>
+          <span class="chip">Store: ${store ? store.name : 'N/A'}</span>
+          <span class="chip">Total: ₹${money(invoice.totals?.total)}</span>
+        </div>
+        <div class="table-container" style="margin-top: 16px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Variant</th>
+                <th class="right">Price</th>
+                <th class="right">Qty</th>
+                <th class="right">Return Qty</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(invoice.items || []).map((item, index) => `
+                <tr>
+                  <td>${getProduct(item.productId)?.name || 'N/A'}</td>
+                  <td>${item.size}/${item.color}</td>
+                  <td class="right">₹${money(item.price)}</td>
+                  <td class="right">${item.qty}</td>
+                  <td class="right"><input class="input" type="number" min="0" max="${item.qty}" value="0" style="width: 80px;" data-index="${index}"></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div class="row" style="margin-top: 16px;">
+          <button class="btn red" id="processRefund">Process Refund</button>
+        </div>
+        <div class="muted" style="margin-top: 16px;">
+          For exchanges, please first process a refund for the returned items and then create a new bill from the POS for the new items.
+        </div>
+      `;
+
+      $('#processRefund').onclick = async () => {
+        const returnItems = [];
+        let refundAmount = 0;
+
+        // First, validate all inputs
+        for (const [index, item] of (invoice.items || []).entries()) {
+          const returnQty = +$(`input[data-index="${index}"]`).value;
+          if (returnQty > item.qty) {
+            alert(`Return quantity for ${getProduct(item.productId)?.name || 'item'} (${returnQty}) cannot exceed original quantity of ${item.qty}.`);
+            return;
+          }
+          if (returnQty < 0) {
+             alert(`Return quantity cannot be negative.`);
+             return;
+          }
+        }
+        
+        let hasItemsToReturn = false;
+        // If validation passes, process the return
+        (invoice.items || []).forEach((item, index) => {
+          const returnQty = +$(`input[data-index="${index}"]`).value;
+          if (returnQty > 0) {
+            hasItemsToReturn = true;
+            returnItems.push({ ...item, returnQty });
+            refundAmount += item.price * returnQty; 
+            adjustStock(invoice.storeId, item.productId, item.size, item.color, returnQty);
+          }
+        });
+
+        if (hasItemsToReturn) {
+          // Create a refund record
+          const refundInvoice = {
+            id: uid(),
+            date: today(),
+            time: new Date().toLocaleTimeString(),
+            storeId: invoice.storeId,
+            number: `REF-${invoice.number}`,
+            relatedInvoiceId: invoice.id,
+            items: returnItems,
+            totals: { sub: -refundAmount, tax: 0, total: -refundAmount, round: 0 },
+            payments: { mode: 'Refund', amount: -refundAmount },
+            notes: `Refund for invoice ${invoice.number}`
+          };
+          db.invoices.push(refundInvoice);
+          await save();
+          alert(`Refund of ₹${money(refundAmount)} processed successfully.`);
+          open('returns');
+        } else {
+          alert('No items selected for return.');
+        }
+      };
+    } else {
+      detailsContainer.innerHTML = '<div class="muted">Invoice not found.</div>';
+    }
+  };
+}
+
+
+/* ====== Customers ====== */
+function renderCustomers(root){
+  root.innerHTML = `
+    <div class="grid">
+      <div class="card">
+        <h3>New Customer</h3>
+        <div class="section stack">
+          <input class="input" id="cName" placeholder="Name">
+          <div class="row">
+            <input class="input" id="cPhone" placeholder="Phone">
+            <input class="input" id="cGSTIN" placeholder="GSTIN (optional)">
+          </div>
+          <textarea class="input" id="cAddr" rows="3" placeholder="Address"></textarea>
+          <div class="row"><button class="btn" id="cAdd">Save</button></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Customers</h3>
+        <div class="section">
+          <div class="table-container"><table><thead><tr><th>Name</th><th>Phone</th><th>GSTIN</th><th>Address</th><th></th></tr></thead>
+          <tbody id="cBody"></tbody></table></div>
+        </div>
+      </div>
+    </div>
+  `;
+  $('#cAdd').onclick=async ()=>{
+    const c={id:uid(),name:$('#cName').value.trim(),phone:$('#cPhone').value.trim(),gstin:$('#cGSTIN').value.trim(),address:$('#cAddr').value.trim()};
+    if(!c.name) return alert('Name required');
+    db.customers.push(c); await save(); renderCustomers(root);
+  };
+  const body=$('#cBody');
+  body.innerHTML = db.customers.map(c=>`
+    <tr><td>${c.name}</td><td>${c.phone||''}</td><td>${c.gstin||''}</td><td>${c.address||''}</td>
+    <td class="right"><button class="btn red" data-id="${c.id}">Delete</button></td></tr>
+  `).join('') || `<tr><td colspan="5" class="muted">No customers.</td></tr>`;
+  body.querySelectorAll('.btn.red').forEach(b=>{
+    b.onclick=async ()=>{ const id=b.dataset.id; if(confirm('Delete customer?')){ db.customers=db.customers.filter(x=>x.id!==id); await save(); renderCustomers(root);} };
+  });
+}
+
+/* ====== Reports ====== */
+function renderReports(root){
+  // Simple daily sales and stock valuation
+  const daily = {};
+  db.invoices.forEach(inv=>{
+    if (inv.number?.startsWith('REF-')) return; // Exclude refunds from sales
+    daily[inv.date] = (daily[inv.date]||0) + (inv.totals?.total||0);
+  });
+  const valuation = db.stock.reduce((a,s)=>{
+    const p=getProduct(s.productId)||{};
+    return a + (p.price||0)*(s.qty||0);
+  },0);
+
+  root.innerHTML = `
+    <div class="stack">
+      <div class="grid">
+        <div class="card"><h3>Daily Sales</h3>
+          <div class="section">
+            <div class="table-container">
+            ${Object.keys(daily).length? '<table><thead><tr><th>Date</th><th class="right">Amount</th></tr></thead><tbody>'+
+              Object.entries(daily).sort((a,b)=>b[0].localeCompare(a[0])).slice(0, 30).map(([d,v])=>`<tr><td>${d}</td><td class="right mono">₹ ${money(v)}</td></tr>`).join('')+
+            '</tbody></table>' : '<div class="muted">No sales yet.</div>'}
+            </div>
+          </div>
+        </div>
+        <div class="card"><h3>Stock Valuation</h3>
+          <div class="section">
+            <div class="kpi"><h4>Current Value</h4><div class="val mono">₹ ${money(valuation)}</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Invoice History</h3>
+        <div class="section">
+          <div class="row">
+            <input class="input" id="repInvSearch" placeholder="Search by Invoice #, Customer Name, or Phone">
+            <button class="btn" id="repInvFind">Search</button>
+          </div>
+        </div>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date & Time</th>
+                  <th>Invoice #</th>
+                  <th>Customer</th>
+                  <th>Store</th>
+                  <th class="right">Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="repInvBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const fillInvoices = () => {
+    const q = ($('#repInvSearch').value || '').toLowerCase();
+    const invoiceBody = $('#repInvBody');
+    
+    const reversedInvoices = [...db.invoices].reverse();
+    let invoicesToShow;
+
+    if (q) {
+      invoicesToShow = reversedInvoices.filter(inv => {
+        const cust = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
+        return (
+          (inv.number || '').toLowerCase().includes(q) ||
+          (cust && cust.name.toLowerCase().includes(q)) ||
+          (cust && cust.phone && cust.phone.includes(q))
+        );
+      });
+    } else {
+      invoicesToShow = reversedInvoices.slice(0, 50);
+    }
+
+    invoiceBody.innerHTML = invoicesToShow.map(inv => {
+      const store = getStore(inv.storeId);
+      const cust = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
+      return `
+        <tr>
+          <td>${inv.date} ${inv.time || ''}</td>
+          <td>${inv.number}</td>
+          <td>${cust ? cust.name : 'Walk-in'}</td>
+          <td>${store ? store.name : 'N/A'}</td>
+          <td class="right mono">₹${money(inv.totals?.total)}</td>
+          <td class="right">
+            <button class="btn" data-id="${inv.id}">Re-print</button>
+          </td>
+        </tr>
+      `;
+    }).join('') || `<tr><td colspan="6" class="muted">No invoices found.</td></tr>`;
+
+    invoiceBody.querySelectorAll('button').forEach(btn => {
+      btn.onclick = () => {
+        const invoiceId = btn.dataset.id;
+        const invoice = db.invoices.find(inv => inv.id === invoiceId);
+        if (invoice) {
+          printInvoice(invoice);
+        }
+      };
+    });
+  };
+
+  $('#repInvFind').onclick = fillInvoices;
+  $('#repInvSearch').onkeydown = (e) => { if (e.key === 'Enter') fillInvoices(); };
+  fillInvoices(); // initial fill
+}
+
+/* ====== User Management ====== */
+function renderUsers(root){
+  root.innerHTML = `
+    <div class="grid">
+      <div class="card">
+        <h3>Add / Edit User</h3>
+        <div class="section stack">
+          <input id="userName" class="input" placeholder="Full Name">
+          <input id="userEmail" class="input" type="email" placeholder="Email Address">
+          <input id="userPhone" class="input" placeholder="Phone Number">
+          <select id="userRole" class="select">
+            <option value="">Select Role</option>
+            <option value="admin">Admin (Full Access)</option>
+            <option value="manager">Manager (Store Management)</option>
+            <option value="cashier">Cashier (POS Only)</option>
+            <option value="stockkeeper">Stock Keeper (Inventory Only)</option>
+          </select>
+          <input id="userPassword" class="input" type="password" placeholder="Password (leave empty to keep current)">
+          <div class="row">
+            <select id="userStore" class="select">
+              <option value="">Assign Store (Optional)</option>
+              ${db.stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+            </select>
+            <select id="userStatus" class="select">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div class="row">
+            <button class="btn" id="userAdd">Save User</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>User Management</h3>
+        <div class="section">
+          <div class="row" style="margin-bottom:16px">
+            <input class="input" id="userSearch" placeholder="Search users by name, email, or role">
+            <button class="btn" id="userRefresh">Refresh</button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Store</th>
+                  <th>Phone</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="userBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:24px">
+      <h3>Role Permissions</h3>
+      <div class="section">
+        <div class="stack">
+          <div class="row">
+            <div class="kpi" style="flex:1">
+              <h4>Admin</h4>
+              <p class="muted" style="font-size:14px">Full access to all features, user management, settings, and reports</p>
+            </div>
+            <div class="kpi" style="flex:1">
+              <h4>Manager</h4>
+              <p class="muted" style="font-size:14px">Store management, inventory, purchases, transfers, and reports</p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="kpi" style="flex:1">
+              <h4>Cashier</h4>
+              <p class="muted" style="font-size:14px">POS billing, returns, and customer management only</p>
+            </div>
+            <div class="kpi" style="flex:1">
+              <h4>Stock Keeper</h4>
+              <p class="muted" style="font-size:14px">Inventory management, stock updates, and purchase entries</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  let editingUserId = null;
+  
+  function fillUsers() {
+    const query = ($('#userSearch').value || '').toLowerCase();
+    const body = $('#userBody');
+    const filteredUsers = db.users.filter(u => {
+      const searchText = [u.name, u.email, u.role, u.phone].filter(Boolean).join(' ').toLowerCase();
+      return searchText.includes(query);
+    });
+    
+    body.innerHTML = filteredUsers.map(u => {
+      const store = u.storeId ? getStore(u.storeId) : null;
+      const statusClass = u.status === 'active' ? 'ok' : 'out';
+      const roleColors = {
+        admin: 'background:var(--gradient-danger)',
+        manager: 'background:var(--gradient-primary)',
+        cashier: 'background:var(--gradient-success)',
+        stockkeeper: 'background:var(--warn)'
+      };
+      return `
+        <tr>
+          <td><strong>${u.name}</strong></td>
+          <td>${u.email}</td>
+          <td><span class="badge" style="${roleColors[u.role] || ''}">${u.role || 'N/A'}</span></td>
+          <td>${store ? store.name : '-'}</td>
+          <td>${u.phone || '-'}</td>
+          <td><span class="status ${statusClass}">${u.status || 'active'}</span></td>
+          <td class="muted">${u.createdAt || today()}</td>
+          <td class="right">
+            <button class="btn secondary" data-id="${u.id}" data-action="edit">Edit</button>
+            <button class="btn red" data-id="${u.id}" data-action="delete">Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('') || `<tr><td colspan="8" class="muted">No users found. Add your first user above.</td></tr>`;
+    
+    // Event listeners for edit and delete
+    body.querySelectorAll('button[data-action="edit"]').forEach(btn => {
+      btn.onclick = () => {
+        const userId = btn.dataset.id;
+        const user = db.users.find(u => u.id === userId);
+        if (user) {
+          editingUserId = userId;
+          $('#userName').value = user.name || '';
+          $('#userEmail').value = user.email || '';
+          $('#userPhone').value = user.phone || '';
+          $('#userRole').value = user.role || '';
+          $('#userStore').value = user.storeId || '';
+          $('#userStatus').value = user.status || 'active';
+          $('#userPassword').value = '';
+          $('#userPassword').placeholder = 'Leave empty to keep current password';
+          $('#userAdd').textContent = 'Update User';
+          window.scrollTo(0, 0);
+        }
+      };
+    });
+    
+    body.querySelectorAll('button[data-action="delete"]').forEach(btn => {
+      btn.onclick = async () => {
+        const userId = btn.dataset.id;
+        if (confirm('Are you sure you want to delete this user?')) {
+          db.users = db.users.filter(u => u.id !== userId);
+          await save();
+          fillUsers();
+        }
+      };
+    });
+  }
+  
+  $('#userAdd').onclick = async () => {
+    const name = $('#userName').value.trim();
+    const email = $('#userEmail').value.trim();
+    const phone = $('#userPhone').value.trim();
+    const role = $('#userRole').value;
+    const storeId = $('#userStore').value;
+    const status = $('#userStatus').value;
+    const password = $('#userPassword').value;
+    
+    if (!name || !email || !role) {
+      return alert('Name, Email, and Role are required');
+    }
+    
+    if (editingUserId) {
+      // Update existing user
+      const user = db.users.find(u => u.id === editingUserId);
+      if (user) {
+        user.name = name;
+        user.email = email;
+        user.phone = phone;
+        user.role = role;
+        user.storeId = storeId;
+        user.status = status;
+        if (password) user.password = password; // In production, this should be hashed
+        user.updatedAt = today();
+      }
+      editingUserId = null;
+      $('#userAdd').textContent = 'Save User';
+    } else {
+      // Create new user
+      const newUser = {
+        id: uid(),
+        name,
+        email,
+        phone,
+        role,
+        storeId,
+        status,
+        password, // In production, this should be hashed
+        createdAt: today(),
+        updatedAt: today()
+      };
+      db.users.push(newUser);
+    }
+    
+    await save();
+    
+    // Clear form
+    $('#userName').value = '';
+    $('#userEmail').value = '';
+    $('#userPhone').value = '';
+    $('#userRole').value = '';
+    $('#userStore').value = '';
+    $('#userStatus').value = 'active';
+    $('#userPassword').value = '';
+    $('#userPassword').placeholder = 'Password (leave empty to keep current)';
+    
+    fillUsers();
+  };
+  
+  $('#userRefresh').onclick = fillUsers;
+  $('#userSearch').oninput = fillUsers;
+  
+  fillUsers();
+}
+
+/* ====== Settings / Data ====== */
+function renderSettings(root){
+  root.innerHTML = `
+    <div class="card">
+      <h3>Data & Settings</h3>
+      <div class="section stack">
+        <div class="row">
+          <button class="btn" id="btnDemo">Load Demo Data</button>
+          <button class="btn" id="btnBackup">Export Backup</button>
+          <input type="file" id="fileImport" style="display:none" accept="application/json">
+          <button class="btn" id="btnRestore">Import Backup</button>
+          <button class="btn red" id="btnClear">Clear All Data</button>
+        </div>
+        <div class="muted">For e‑invoice/e‑way bill integration, push invoices server‑side to NIC via your provider; client-only apps cannot securely hold credentials.</div>
+      </div>
+    </div>
+  `;
+  $('#btnDemo').onclick=async ()=>{ loadDemo(); await save(); alert('Demo data loaded'); open('dashboard'); };
+  $('#btnBackup').onclick=()=>{
+    const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='clothix-backup.json'; a.click();
+  };
+  $('#btnRestore').onclick=()=> $('#fileImport').click();
+  $('#fileImport').onchange=(e)=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=async ()=>{
+      try{ db=JSON.parse(r.result); await save(); alert('Imported'); open('dashboard'); }catch(err){ alert('Invalid file'); }
+    }; r.readAsText(f);
+  };
+  $('#btnClear').onclick=async ()=>{ if(confirm('Delete all data?')){
+    db=initDB();
+    await supabaseClient.from('stores').delete().neq('id', -1);
+    await supabaseClient.from('products').delete().neq('id', -1);
+    await supabaseClient.from('stock').delete().neq('id', -1);
+    await supabaseClient.from('customers').delete().neq('id', -1);
+    await supabaseClient.from('invoices').delete().neq('id', -1);
+    await supabaseClient.from('transfers').delete().neq('id', -1);
+    await supabaseClient.from('purchases').delete().neq('id', -1);
+    await supabaseClient.from('seq').delete().neq('id', -1);
+    await save();
+    open('dashboard');
+  } };
+}
+
+/* ====== Demo Seed ====== */
+function loadDemo(){
+  db=initDB();
+  const s1={id:uid(),name:'MG Road',code:'BLR-01',address:'Bengaluru',phone:'080-123456'};
+  const s2={id:uid(),name:'Phoenix Mall',code:'BLR-02',address:'Bengaluru',phone:'080-654321'};
+  db.stores.push(s1,s2);
+  const p1={id:uid(),name:'Polo Tee',style:'PT-100',brand:'Clothix',sku:'PT100',barcode:'890100',hsn:'6105',taxPct:5,category:'Men > Tees',mrp:799,price:699,
+    sizes:['S','M','L','XL'],colors:['Black','White'],variants:[]};
+  p1.sizes.forEach(sz=>p1.colors.forEach(cl=>p1.variants.push({size:sz,color:cl,sku:`PT100-${sz}-${cl.toUpperCase()}`,barcode:`890100${sz[0]}${cl[0]}`})));
+  const p2={id:uid(),name:'Denim Jeans',style:'DJ-220',brand:'Clothix',sku:'DJ220',barcode:'890220',hsn:'6203',taxPct:12,category:'Men > Jeans',mrp:1999,price:1699,
+    sizes:['30','32','34','36'],colors:['Blue'],variants:[]};
+  p2.sizes.forEach(sz=>p2.colors.forEach(cl=>p2.variants.push({size:sz,color:cl,sku:`DJ220-${sz}-${cl.toUpperCase()}`,barcode:`890220${sz}${cl[0]}`})));
+  db.products.push(p1,p2);
+  // stock
+  p1.variants.slice(0,4).forEach(v=>{
+    db.stock.push({storeId:s1.id,productId:p1.id,size:v.size,color:v.color,qty:10,min:2});
+  });
+  p2.variants.forEach(v=>{
+    db.stock.push({storeId:s2.id,productId:p2.id,size:v.size,color:v.color,qty:6,min:2});
+  });
+  // customers
+  db.customers.push({id:uid(),name:'Arun',phone:'9876543210',gstin:'',address:'Bengaluru'});
+}
+
+/* ====== Header buttons ====== */
+$('#exportBtn').onclick=()=>{ const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='clothix-backup.json'; a.click(); };
+$('#importBtn').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=async (e)=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=async ()=>{ try{ db=JSON.parse(r.result); await save(); alert('Imported'); open('dashboard'); }catch(e){ alert('Invalid file'); } }; r.readAsText(f); }; inp.click(); };
+$('#demoBtn').onclick=async ()=>{ loadDemo(); await save(); open('dashboard'); };
+$('#resetBtn').onclick=async ()=>{ if(confirm('Clear all data?')){ db=initDB(); await save(); open('dashboard'); } };
+});
+</script>
+<script>
+const themeToggle = document.getElementById('theme-toggle');
+const htmlEl = document.documentElement;
+
+// Load theme from local storage
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+    htmlEl.setAttribute('data-theme', savedTheme);
+    themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+} else {
+    // Default to light theme if no preference is saved
+    htmlEl.setAttribute('data-theme', 'light');
+    themeToggle.textContent = '🌙';
+}
+
+
+themeToggle.addEventListener('click', () => {
+    if (htmlEl.getAttribute('data-theme') === 'dark') {
+        htmlEl.setAttribute('data-theme', 'light');
+        themeToggle.textContent = '🌙';
+        localStorage.setItem('theme', 'light');
+    } else {
+        htmlEl.setAttribute('data-theme', 'dark');
+        themeToggle.textContent = '☀️';
+        localStorage.setItem('theme', 'dark');
+    }
+});
+</script>
+</body>
+</html>
