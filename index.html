@@ -923,6 +923,14 @@ function calculateSalesVelocity(productId, size, color) {
 }
 
 function printInvoice(inv) {
+    const printerSettings = JSON.parse(localStorage.getItem('printerSettings') || '{"type":"browser","paperWidth":"80","autoPrint":false,"copies":1}');
+    
+    // Auto print if enabled
+    if (printerSettings.autoPrint && printerSettings.type !== 'escpos') {
+      printDirect(inv, printerSettings);
+      return;
+    }
+    
     const modal = document.getElementById('print-modal');
     const previewContent = document.getElementById('preview-content');
     const closeModal = document.getElementById('close-modal');
@@ -930,7 +938,32 @@ function printInvoice(inv) {
     const cancelBtn = document.getElementById('cancel-btn');
 
     const st = getStore(inv.storeId);
-    previewContent.innerHTML = formatInvoice(inv, st);
+    
+    // Format based on printer type
+    if (printerSettings.type === 'thermal' || printerSettings.type === 'thermal80') {
+      previewContent.innerHTML = formatThermalInvoice(inv, st, printerSettings.paperWidth);
+    } else if (printerSettings.type === 'escpos') {
+      previewContent.innerHTML = `
+        <div style="padding:20px;text-align:center;">
+          <h3>ESC/POS Direct Print</h3>
+          <p class="muted">This will send the receipt directly to your thermal printer</p>
+          <button class="btn green" id="escposPrint" style="margin:20px auto;">🖨️ Print to ESC/POS Printer</button>
+        </div>
+      `;
+      modal.style.display = 'block';
+      
+      $('#escposPrint').onclick = async () => {
+        await printESCPOS(inv, st);
+        modal.style.display = 'none';
+      };
+      
+      closeModal.onclick = () => modal.style.display = 'none';
+      cancelBtn.onclick = () => modal.style.display = 'none';
+      return;
+    } else {
+      previewContent.innerHTML = formatInvoice(inv, st);
+    }
+    
     modal.style.display = 'block';
 
     const closeModalHandler = () => {
@@ -939,7 +972,10 @@ function printInvoice(inv) {
     };
 
     const printHandler = () => {
-        window.print();
+        // Print multiple copies if configured
+        for (let i = 0; i < printerSettings.copies; i++) {
+          window.print();
+        }
         modal.style.display = 'none';
         cleanup();
     };
@@ -963,6 +999,190 @@ function printInvoice(inv) {
     printBtn.addEventListener('click', printHandler);
     window.addEventListener('click', windowClickHandler);
 }
+
+// Direct print without preview
+function printDirect(inv, settings) {
+  const modal = document.getElementById('print-modal');
+  const previewContent = document.getElementById('preview-content');
+  const st = getStore(inv.storeId);
+  
+  if (settings.type === 'thermal' || settings.type === 'thermal80') {
+    previewContent.innerHTML = formatThermalInvoice(inv, st, settings.paperWidth);
+  } else {
+    previewContent.innerHTML = formatInvoice(inv, st);
+  }
+  
+  modal.style.display = 'block';
+  
+  setTimeout(() => {
+    for (let i = 0; i < settings.copies; i++) {
+      window.print();
+    }
+    modal.style.display = 'none';
+  }, 100);
+}
+
+// Format invoice for thermal printers
+function formatThermalInvoice(inv, store, paperWidth) {
+    const cust = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
+    const width = paperWidth === '58' ? '200px' : '280px';
+    const fontSize = paperWidth === '58' ? '7pt' : '8pt';
+    
+    let html = `
+        <div style="font-family: 'Courier New', monospace; font-size: ${fontSize}; width: ${width}; margin: 0 auto; padding: 5px; background: white; color: black;">
+            <div style="text-align: center; border-bottom: 1px dashed black; padding-bottom: 5px; margin-bottom: 5px;">
+                <div style="font-size: ${paperWidth === '58' ? '10pt' : '12pt'}; font-weight: bold; color: black;">${store?.name || 'CLOTHIX RETAIL'}</div>
+                <div style="font-size: 7pt; color: black;">${store?.address || ''}</div>
+                <div style="font-size: 7pt; color: black;">${store?.phone || ''}</div>
+            </div>
+            
+            <table style="width: 100%; font-size: ${fontSize}; margin: 3px 0; color: black;">
+                <tr>
+                    <td style="color: black;"><strong>Bill:</strong> ${inv.number}</td>
+                    <td style="text-align: right; color: black;">${inv.date}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="color: black;">${inv.time}</td>
+                </tr>
+                ${cust ? `<tr><td colspan="2" style="color: black;"><strong>Cust:</strong> ${cust.name}</td></tr>` : ''}
+            </table>
+            
+            <div style="border-top: 1px dashed black; border-bottom: 1px dashed black; padding: 3px 0; margin: 3px 0;">`;
+    
+    inv.items.forEach((it) => {
+        const p = getProduct(it.productId) || {};
+        const base = (it.price || 0) * (it.qty || 0);
+        const disc = base * (it.discount || 0) / 100;
+        const lineTotal = base - disc;
+        
+        html += `
+                <div style="margin-bottom: 3px;">
+                    <div style="color: black;"><strong>${p.name || 'N/A'}</strong></div>
+                    <div style="color: black;">  ${it.size}/${it.color} x ${it.qty} @ ₹${money(it.price)} ${it.discount > 0 ? '(-' + it.discount + '%)' : ''}</div>
+                    <div style="text-align: right; color: black;">₹${money(lineTotal)}</div>
+                </div>`;
+    });
+
+    html += `
+            </div>
+            
+            <table style="width: 100%; font-size: ${fontSize}; margin: 3px 0; color: black;">
+                <tr>
+                    <td style="text-align: right; color: black;">Subtotal:</td>
+                    <td style="text-align: right; width: 60px; color: black;">₹${money(inv.totals.sub)}</td>
+                </tr>
+                <tr>
+                    <td style="text-align: right; color: black;">Tax (GST):</td>
+                    <td style="text-align: right; color: black;">₹${money(inv.totals.tax)}</td>
+                </tr>
+                ${inv.totals.round !== 0 ? `
+                <tr>
+                    <td style="text-align: right; color: black;">Rounding:</td>
+                    <td style="text-align: right; color: black;">₹${money(inv.totals.round)}</td>
+                </tr>` : ''}
+                <tr style="border-top: 1px dashed black; font-weight: bold;">
+                    <td style="text-align: right; font-size: ${paperWidth === '58' ? '9pt' : '10pt'}; padding-top: 3px; color: black;">TOTAL:</td>
+                    <td style="text-align: right; font-size: ${paperWidth === '58' ? '9pt' : '10pt'}; padding-top: 3px; color: black;">₹${money(inv.totals.total)}</td>
+                </tr>
+            </table>
+            
+            <div style="margin: 3px 0; font-size: ${fontSize}; color: black;">
+                <strong>Payment:</strong>
+                ${Array.isArray(inv.payments) ? 
+                  inv.payments.map(p => `${p.mode}: ₹${money(p.amount)}`).join(', ') :
+                  `${inv.payments.mode}${inv.payments.amount ? ': ₹' + money(inv.payments.amount) : ''}`
+                }
+            </div>
+            
+            ${inv.notes ? `<div style="margin: 3px 0; font-size: 7pt; color: black;">${inv.notes}</div>` : ''}
+            
+            <div style="text-align: center; margin: 5px 0; padding-top: 5px; border-top: 1px dashed black;">
+                <div style="font-size: ${paperWidth === '58' ? '8pt' : '9pt'}; font-weight: bold; color: black;">THANK YOU!</div>
+                <div style="font-size: 7pt; color: black;">Visit Again</div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 10px; font-size: 6pt; color: black;">
+                ${'='.repeat(paperWidth === '58' ? 16 : 24)}
+            </div>
+        </div>
+    `;
+    return html;
+}
+
+// ESC/POS Direct Printing (Web Serial API)
+async function printESCPOS(inv, store) {
+  if (!('serial' in navigator)) {
+    alert('Web Serial API not supported in this browser. Please use Chrome/Edge.');
+    return;
+  }
+  
+  try {
+    // Request port
+    const port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 9600 });
+    
+    const writer = port.writable.getWriter();
+    const encoder = new TextEncoder();
+    
+    // ESC/POS Commands
+    const ESC = '\x1B';
+    const GS = '\x1D';
+    const INIT = ESC + '@';
+    const CENTER = ESC + 'a' + '\x01';
+    const LEFT = ESC + 'a' + '\x00';
+    const BOLD_ON = ESC + 'E' + '\x01';
+    const BOLD_OFF = ESC + 'E' + '\x00';
+    const CUT = GS + 'V' + '\x00';
+    const FEED = '\n';
+    
+    // Build receipt
+    let receipt = INIT;
+    receipt += CENTER + BOLD_ON + (store?.name || 'CLOTHIX RETAIL') + BOLD_OFF + FEED;
+    receipt += LEFT + (store?.address || '') + FEED;
+    receipt += (store?.phone || '') + FEED + FEED;
+    
+    const cust = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
+    receipt += 'Bill: ' + inv.number + '  ' + inv.date + FEED;
+    receipt += inv.time + FEED;
+    if (cust) receipt += 'Customer: ' + cust.name + FEED;
+    receipt += '--------------------------------' + FEED;
+    
+    inv.items.forEach(it => {
+      const p = getProduct(it.productId) || {};
+      const lineTotal = (it.price * it.qty) * (1 - (it.discount || 0) / 100);
+      receipt += p.name + FEED;
+      receipt += `  ${it.size}/${it.color} x${it.qty} @ ${money(it.price)}` + FEED;
+      receipt += `  Total: Rs.${money(lineTotal)}` + FEED;
+    });
+    
+    receipt += '--------------------------------' + FEED;
+    receipt += `Subtotal:        Rs.${money(inv.totals.sub)}` + FEED;
+    receipt += `Tax (GST):       Rs.${money(inv.totals.tax)}` + FEED;
+    if (inv.totals.round !== 0) {
+      receipt += `Rounding:        Rs.${money(inv.totals.round)}` + FEED;
+    }
+    receipt += BOLD_ON + `TOTAL:           Rs.${money(inv.totals.total)}` + BOLD_OFF + FEED;
+    receipt += '--------------------------------' + FEED;
+    
+    const payments = Array.isArray(inv.payments) ? inv.payments : [inv.payments];
+    receipt += 'Payment: ' + payments.map(p => `${p.mode}: Rs.${money(p.amount)}`).join(', ') + FEED;
+    
+    receipt += FEED + CENTER + BOLD_ON + 'THANK YOU!' + BOLD_OFF + FEED;
+    receipt += 'Visit Again' + FEED + FEED + FEED;
+    receipt += CUT;
+    
+    // Send to printer
+    await writer.write(encoder.encode(receipt));
+    await writer.close();
+    await port.close();
+    
+    showNotification('✅ Receipt printed successfully', 'success');
+  } catch (error) {
+    console.error('Print error:', error);
+    alert('Print failed: ' + error.message);
+  }
+}
+
 function formatInvoice(inv, store) {
     const cust = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
     let html = `
@@ -3795,6 +4015,54 @@ function renderSettings(root){
       </div>
       
       <div class="card">
+        <h3>🖨️ Receipt Printer Settings</h3>
+        <div class="section stack">
+          <div style="background:var(--panel-2);padding:16px;border-radius:8px;margin-bottom:16px;">
+            <h4 style="margin:0 0 12px 0;font-size:14px;">Printer Configuration</h4>
+            <div class="row" style="margin-bottom:12px;">
+              <label style="min-width:120px;">Printer Type:</label>
+              <select class="select" id="printerType" style="flex:1;">
+                <option value="browser">Browser Print (Standard)</option>
+                <option value="thermal">Thermal Printer (58mm)</option>
+                <option value="thermal80">Thermal Printer (80mm)</option>
+                <option value="escpos">ESC/POS Direct</option>
+              </select>
+            </div>
+            <div class="row" style="margin-bottom:12px;">
+              <label style="min-width:120px;">Paper Width:</label>
+              <select class="select" id="paperWidth" style="flex:1;">
+                <option value="58">58mm (2.28")</option>
+                <option value="80" selected>80mm (3.15")</option>
+              </select>
+            </div>
+            <div class="row" style="margin-bottom:12px;">
+              <label style="min-width:120px;">Auto Print:</label>
+              <input type="checkbox" id="autoPrint" style="width:20px;height:20px;">
+              <span class="muted" style="margin-left:8px;">Automatically print after each sale</span>
+            </div>
+            <div class="row" style="margin-bottom:12px;">
+              <label style="min-width:120px;">Receipt Copies:</label>
+              <input type="number" class="input" id="receiptCopies" value="1" min="1" max="5" style="width:80px;">
+            </div>
+          </div>
+          
+          <div class="row">
+            <button class="btn green" id="savePrinterSettings">💾 Save Printer Settings</button>
+            <button class="btn secondary" id="testPrint">🖨️ Test Print</button>
+          </div>
+          
+          <div style="background:var(--panel-2);padding:12px;border-radius:8px;margin-top:16px;">
+            <h4 style="margin:0 0 8px 0;font-size:14px;">Printer Types</h4>
+            <ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.6;" class="muted">
+              <li><strong>Browser Print:</strong> Standard printing via browser (works with any printer)</li>
+              <li><strong>Thermal 58mm/80mm:</strong> Optimized layout for thermal receipt printers</li>
+              <li><strong>ESC/POS Direct:</strong> Direct communication with ESC/POS printers (requires Web Serial API)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
         <h3>Data & Settings</h3>
         <div class="section stack">
           <div class="row">
@@ -3886,6 +4154,42 @@ function renderSettings(root){
   }
   
   updateSyncDisplay();
+  
+  // Printer settings
+  const printerSettings = JSON.parse(localStorage.getItem('printerSettings') || '{"type":"browser","paperWidth":"80","autoPrint":false,"copies":1}');
+  $('#printerType').value = printerSettings.type || 'browser';
+  $('#paperWidth').value = printerSettings.paperWidth || '80';
+  $('#autoPrint').checked = printerSettings.autoPrint || false;
+  $('#receiptCopies').value = printerSettings.copies || 1;
+  
+  $('#savePrinterSettings').onclick = () => {
+    const settings = {
+      type: $('#printerType').value,
+      paperWidth: $('#paperWidth').value,
+      autoPrint: $('#autoPrint').checked,
+      copies: parseInt($('#receiptCopies').value) || 1
+    };
+    localStorage.setItem('printerSettings', JSON.stringify(settings));
+    showNotification('✅ Printer settings saved', 'success');
+  };
+  
+  $('#testPrint').onclick = () => {
+    // Create a test invoice
+    const testInvoice = {
+      number: 'TEST-001',
+      date: today(),
+      time: new Date().toLocaleTimeString(),
+      storeId: db.stores[0]?.id,
+      items: [
+        { productId: db.products[0]?.id, size: 'M', color: 'Blue', qty: 2, price: 500, discount: 0, taxPct: 5 },
+        { productId: db.products[1]?.id, size: 'L', color: 'Black', qty: 1, price: 1200, discount: 10, taxPct: 12 }
+      ],
+      totals: { sub: 2080, tax: 124.8, total: 2204.80, round: -0.80 },
+      payments: [{ mode: 'Cash', amount: 2204 }],
+      notes: 'Test Receipt'
+    };
+    printInvoice(testInvoice);
+  };
   
   // Manual sync button
   $('#btnManualSync').onclick = async () => {
