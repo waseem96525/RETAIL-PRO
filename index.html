@@ -347,6 +347,7 @@ function initDB() {
     users: [],
     alerts: [],
     reorderSuggestions: [],
+    cashReconciliation: [],
     seq: {inv:1,trn:1,pur:1}
   };
 }
@@ -372,6 +373,7 @@ async function load() {
     data.stock = data.stock || [];
     data.alerts = data.alerts || [];
     data.reorderSuggestions = data.reorderSuggestions || [];
+    data.cashReconciliation = data.cashReconciliation || [];
     data.customers = data.customers || [];
     data.invoices = data.invoices || [];
     data.transfers = data.transfers || [];
@@ -797,7 +799,13 @@ function formatInvoice(inv, store) {
                 </tr>
             </table>
             
-            <p style="margin: 3px 0; font-size: 8pt; color: black;"><strong>Payment:</strong> ${inv.payments.mode}${inv.payments.amount ? ' - ₹' + money(inv.payments.amount) : ''}</p>
+            <div style="margin: 3px 0; font-size: 8pt; color: black;">
+                <strong>Payment:</strong>
+                ${Array.isArray(inv.payments) ? 
+                  inv.payments.map(p => `${p.mode}: ₹${money(p.amount)}`).join(', ') :
+                  `${inv.payments.mode}${inv.payments.amount ? ' - ₹' + money(inv.payments.amount) : ''}`
+                }
+            </div>
             
             ${inv.notes ? `<p style="margin: 2px 0; font-size: 7pt; color: black;"><strong>Notes:</strong> ${inv.notes}</p>` : ''}
             
@@ -1421,14 +1429,37 @@ function renderPOS(root){
         </div>
       </div>
       <div class="card">
-        <h3>Totals</h3>
+        <h3>Totals & Payment</h3>
         <div class="section stack" id="posTotals"></div>
         <div class="section">
-          <div class="row">
-            <select class="select" id="payMode">
-              <option>Cash</option><option>UPI</option><option>Card</option>
+          <h4 style="margin:0 0 12px 0;font-size:14px;color:var(--muted)">Payment Methods</h4>
+          <div id="paymentMethods" style="margin-bottom:12px;">
+            <!-- Payment lines will be added here -->
+          </div>
+          <div class="row" style="margin-bottom:12px;">
+            <select class="select" id="payMode" style="flex:1">
+              <option value="Cash">Cash</option>
+              <option value="Card">Card</option>
+              <option value="UPI">UPI</option>
+              <option value="Wallet">Wallet</option>
+              <option value="Credit">Credit</option>
             </select>
-            <input class="input" id="payAmt" placeholder="Amount">
+            <input class="input" id="payAmt" placeholder="Amount" style="flex:1">
+            <button class="btn" id="addPayment">+ Add</button>
+          </div>
+          <div id="paymentSummary" style="padding:12px;background:var(--panel-2);border-radius:8px;margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span>Total Amount:</span>
+              <span id="totalAmount" class="mono" style="font-weight:bold;">₹0.00</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span>Paid Amount:</span>
+              <span id="paidAmount" class="mono" style="color:var(--good);font-weight:bold;">₹0.00</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;">
+              <span style="font-weight:bold;">Balance:</span>
+              <span id="balanceAmount" class="mono" style="font-weight:bold;font-size:16px;">₹0.00</span>
+            </div>
           </div>
           <div class="row">
             <textarea class="input" id="posNotes" rows="2" placeholder="Notes"></textarea>
@@ -1440,6 +1471,58 @@ function renderPOS(root){
   const storeId = db.stores[0]?.id || '';
   if($('#posStore')) $('#posStore').value = storeId;
   const cart=[];
+  const payments = []; // Track multiple payment methods
+  
+  function updatePaymentSummary() {
+    const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+    let grandTotal = 0;
+    
+    // Calculate cart total
+    if (cart.length > 0) {
+      let sub = 0, tax = 0;
+      cart.forEach(it => {
+        const base = (it.price || 0) * (it.qty || 0);
+        const disc = base * (it.discount || 0) / 100;
+        const taxable = Math.max(0, base - disc);
+        sub += taxable;
+        tax += taxable * (it.taxPct || 0) / 100;
+      });
+      const total = sub + tax;
+      const r = Math.round(total) - total;
+      grandTotal = total + r;
+    }
+    
+    const balance = grandTotal - totalPaid;
+    
+    $('#totalAmount').textContent = '₹' + money(grandTotal);
+    $('#paidAmount').textContent = '₹' + money(totalPaid);
+    $('#balanceAmount').textContent = '₹' + money(balance);
+    $('#balanceAmount').style.color = balance > 0.01 ? 'var(--danger)' : balance < -0.01 ? 'var(--warn)' : 'var(--good)';
+    
+    // Update payment methods display
+    const paymentMethodsEl = $('#paymentMethods');
+    if (payments.length === 0) {
+      paymentMethodsEl.innerHTML = '<div class="muted" style="font-size:13px;padding:8px;">No payments added yet</div>';
+    } else {
+      paymentMethodsEl.innerHTML = payments.map((p, idx) => `
+        <div style="display:flex;gap:8px;align-items:center;padding:8px;background:var(--panel-2);border-radius:6px;margin-bottom:6px;">
+          <span class="badge" style="background:var(--gradient-primary);min-width:60px;">${p.mode}</span>
+          <span class="mono" style="flex:1;font-weight:bold;">₹${money(p.amount)}</span>
+          ${p.reference ? `<span class="muted" style="font-size:12px;">${p.reference}</span>` : ''}
+          <button class="btn red" style="padding:4px 8px;font-size:12px;" data-idx="${idx}">Remove</button>
+        </div>
+      `).join('');
+      
+      // Add remove handlers
+      paymentMethodsEl.querySelectorAll('button[data-idx]').forEach(btn => {
+        btn.onclick = () => {
+          payments.splice(+btn.dataset.idx, 1);
+          updatePaymentSummary();
+        };
+      });
+    }
+  }
+  
   function addByQuery(q){
     q = (q||'').trim();
     if(!q) return;
@@ -1476,6 +1559,32 @@ function renderPOS(root){
     $('#posScan').value='';
     refreshCart();
   }
+  
+  $('#addPayment').onclick = () => {
+    const mode = $('#payMode').value;
+    const amount = parseFloat($('#payAmt').value);
+    
+    if (!amount || amount <= 0) {
+      return alert('Please enter a valid payment amount');
+    }
+    
+    payments.push({
+      mode: mode,
+      amount: amount,
+      reference: '',
+      timestamp: new Date().toISOString()
+    });
+    
+    $('#payAmt').value = '';
+    updatePaymentSummary();
+  };
+  
+  $('#payAmt').onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      $('#addPayment').click();
+    }
+  };
+
   function refreshCart(){
     const stId=$('#posStore').value;
     $('#posBody').innerHTML = cart.map((it,i)=>{
@@ -1533,7 +1642,7 @@ function renderPOS(root){
     $('#payAmt').value = money(grand);
   }
   $('#posScan').addEventListener('keydown',e=>{ if(e.key==='Enter'){ addByQuery(e.target.value); } });
-  $('#posClear').onclick=()=>{ if(confirm('Clear cart?')){ cart.length=0; refreshCart(); } };
+  $('#posClear').onclick=()=>{ if(confirm('Clear cart?')){ cart.length=0; payments.length=0; refreshCart(); updatePaymentSummary(); } };
   $('#posPay').onclick=async ()=>{
     const stId=$('#posStore').value;
     if(!stId) return alert('Select store');
@@ -1552,6 +1661,18 @@ function renderPOS(root){
       sub+=taxable; tax+=taxable*(it.taxPct||0)/100;
     });
     const total=sub+tax; const r=Math.round(total)-total; const grand=total+r;
+    
+    // Validate payments
+    const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+    if (Math.abs(totalPaid - grand) > 0.01) {
+      const confirmed = confirm(`Payment mismatch! Total: ₹${money(grand)}, Paid: ₹${money(totalPaid)}. Continue anyway?`);
+      if (!confirmed) return;
+    }
+    
+    // Default to single payment if no split payments added
+    const finalPayments = payments.length > 0 ? JSON.parse(JSON.stringify(payments)) : 
+      [{mode: $('#payMode').value || 'Cash', amount: grand, reference: '', timestamp: new Date().toISOString()}];
+    
     const invNo = $('#posNumber').value.trim() || `INV-${String(db.seq.inv++).padStart(5,'0')}`;
     const inv = {
       id:uid(),
@@ -1563,7 +1684,7 @@ function renderPOS(root){
       cashierId: currentUser ? currentUser.id : null,
       items: JSON.parse(JSON.stringify(cart)),
       totals:{sub,tax,total:grand,round:r},
-      payments:{mode:$('#payMode').value,amount:+($('#payAmt').value||grand)},
+      payments: finalPayments, // Now an array of payment methods
       notes:$('#posNotes').value.trim()
     };
     db.invoices.push(inv);
@@ -1571,10 +1692,12 @@ function renderPOS(root){
     cart.forEach(it=> adjustStock(stId,it.productId,it.size,it.color,-it.qty));
     await save();
     printInvoice(inv);
+    payments.length = 0; // Clear payments
     renderPOS(root);
   };
 
   refreshCart();
+  updatePaymentSummary();
 }
 
 /* ====== Returns ====== */
@@ -1682,7 +1805,7 @@ function renderReturns(root) {
             relatedInvoiceId: invoice.id,
             items: returnItems,
             totals: { sub: -refundAmount, tax: 0, total: -refundAmount, round: 0 },
-            payments: { mode: 'Refund', amount: -refundAmount },
+            payments: [{ mode: 'Refund', amount: -refundAmount, reference: '', timestamp: new Date().toISOString() }],
             notes: `Refund for invoice ${invoice.number}`
           };
           db.invoices.push(refundInvoice);
@@ -1753,8 +1876,8 @@ function renderReports(root){
   
   // Hourly sales (last 24 hours)
   const hourly = Array(24).fill(0);
-  const today = new Date().toISOString().slice(0,10);
-  salesInvoices.filter(inv => inv.date === today).forEach(inv => {
+  const todayDate = new Date().toISOString().slice(0,10);
+  salesInvoices.filter(inv => inv.date === todayDate).forEach(inv => {
     if (inv.time) {
       const hour = parseInt(inv.time.split(':')[0]);
       if (!isNaN(hour)) hourly[hour] += inv.totals?.total || 0;
@@ -2048,6 +2171,174 @@ function renderReports(root){
         </div>
       </div>
 
+      <!-- Payment Method Analysis -->
+      <div class="grid">
+        <div class="card">
+          <h3>💳 Payment Method Breakdown</h3>
+          <div class="section">
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Payment Method</th>
+                    <th class="right">Transactions</th>
+                    <th class="right">Total Amount</th>
+                    <th class="right">Avg Transaction</th>
+                    <th class="right">% of Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(() => {
+                    const paymentStats = {};
+                    let grandTotal = 0;
+                    
+                    salesInvoices.forEach(inv => {
+                      const payments = Array.isArray(inv.payments) ? inv.payments : [inv.payments];
+                      payments.forEach(p => {
+                        const mode = p.mode || 'Cash';
+                        if (!paymentStats[mode]) {
+                          paymentStats[mode] = { count: 0, total: 0 };
+                        }
+                        paymentStats[mode].count++;
+                        paymentStats[mode].total += p.amount || 0;
+                        grandTotal += p.amount || 0;
+                      });
+                    });
+                    
+                    const paymentMethods = {
+                      'Cash': { icon: '💵', color: 'var(--good)' },
+                      'Card': { icon: '💳', color: 'var(--accent)' },
+                      'UPI': { icon: '📱', color: 'var(--accent-2)' },
+                      'Wallet': { icon: '👛', color: 'var(--warn)' },
+                      'Credit': { icon: '🏦', color: 'var(--muted)' }
+                    };
+                    
+                    return Object.entries(paymentStats)
+                      .sort((a, b) => b[1].total - a[1].total)
+                      .map(([mode, stats]) => {
+                        const avgTxn = stats.count > 0 ? stats.total / stats.count : 0;
+                        const percentage = grandTotal > 0 ? (stats.total / grandTotal) * 100 : 0;
+                        const methodInfo = paymentMethods[mode] || { icon: '💰', color: 'var(--muted)' };
+                        
+                        return `
+                          <tr>
+                            <td><strong>${methodInfo.icon} ${mode}</strong></td>
+                            <td class="right">${stats.count}</td>
+                            <td class="right mono" style="color:${methodInfo.color};font-weight:bold;">₹${money(stats.total)}</td>
+                            <td class="right mono">₹${money(avgTxn)}</td>
+                            <td class="right">
+                              <div style="display:inline-flex;align-items:center;gap:8px;">
+                                <div style="width:100px;background:var(--panel-2);border-radius:4px;height:20px;position:relative;overflow:hidden;">
+                                  <div style="width:${percentage}%;height:100%;background:${methodInfo.color};"></div>
+                                </div>
+                                <span style="font-weight:bold;min-width:45px;">${percentage.toFixed(1)}%</span>
+                              </div>
+                            </td>
+                          </tr>
+                        `;
+                      }).join('') || '<tr><td colspan="5" class="muted">No payment data available.</td></tr>';
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>💰 Daily Cash Reconciliation</h3>
+          <div class="section">
+            <div style="padding:16px;">
+              ${(() => {
+                const dailyCash = {};
+                
+                salesInvoices.forEach(inv => {
+                  const payments = Array.isArray(inv.payments) ? inv.payments : [inv.payments];
+                  payments.forEach(p => {
+                    if (p.mode === 'Cash') {
+                      const date = inv.date;
+                      if (!dailyCash[date]) dailyCash[date] = 0;
+                      dailyCash[date] += p.amount || 0;
+                    }
+                  });
+                });
+                
+                const last7Days = Object.entries(dailyCash)
+                  .sort((a, b) => b[0].localeCompare(a[0]))
+                  .slice(0, 7);
+                
+                if (last7Days.length === 0) {
+                  return '<div class="muted">No cash transactions yet.</div>';
+                }
+                
+                const maxCash = Math.max(...last7Days.map(([, amt]) => amt), 1);
+                
+                return last7Days.map(([date, amount]) => {
+                  const widthPct = (amount / maxCash) * 100;
+                  const isToday = date === today();
+                  return `
+                    <div style="margin-bottom:16px;">
+                      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-weight:${isToday ? 'bold' : '500'};">${date}${isToday ? ' (Today)' : ''}</span>
+                        <span style="font-family:monospace;color:var(--good);font-weight:bold;">₹${money(amount)}</span>
+                      </div>
+                      <div style="background:var(--panel-2);border-radius:4px;height:24px;position:relative;overflow:hidden;">
+                        <div style="width:${widthPct}%;height:100%;background:var(--gradient-success);transition:width 0.3s;"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+              })()}
+            </div>
+            <div style="padding:0 16px 16px 16px;">
+              <button class="btn green" id="exportCashReport" style="width:100%;">📊 Export Cash Report</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split Payment Analysis -->
+      <div class="card">
+        <h3>🔀 Split Payment Transactions</h3>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Invoice #</th>
+                  <th>Customer</th>
+                  <th class="right">Total Amount</th>
+                  <th>Payment Methods</th>
+                  <th>Split Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${salesInvoices
+                  .filter(inv => Array.isArray(inv.payments) && inv.payments.length > 1)
+                  .sort((a, b) => b.date.localeCompare(a.date))
+                  .slice(0, 20)
+                  .map(inv => {
+                    const customer = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
+                    const paymentModes = inv.payments.map(p => p.mode).join(', ');
+                    const paymentDetails = inv.payments.map(p => `${p.mode}: ₹${money(p.amount)}`).join(' + ');
+                    
+                    return `
+                      <tr>
+                        <td>${inv.date}</td>
+                        <td><strong>${inv.number}</strong></td>
+                        <td>${customer ? customer.name : 'Walk-in'}</td>
+                        <td class="right mono">₹${money(inv.totals?.total)}</td>
+                        <td><span class="badge" style="background:var(--warn)">${inv.payments.length} methods</span></td>
+                        <td class="muted" style="font-size:12px;">${paymentDetails}</td>
+                      </tr>
+                    `;
+                  }).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;">No split payment transactions found.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       <!-- Invoice History -->
       <div class="card">
         <h3>📄 Invoice History</h3>
@@ -2129,6 +2420,63 @@ function renderReports(root){
   $('#repInvFind').onclick = fillInvoices;
   $('#repInvSearch').onkeydown = (e) => { if (e.key === 'Enter') fillInvoices(); };
   fillInvoices(); // initial fill
+  
+  // Export cash report functionality
+  const exportBtn = $('#exportCashReport');
+  if (exportBtn) {
+    exportBtn.onclick = () => {
+      const dailyCash = {};
+      const cashTransactions = [];
+      
+      salesInvoices.forEach(inv => {
+        const payments = Array.isArray(inv.payments) ? inv.payments : [inv.payments];
+        payments.forEach(p => {
+          if (p.mode === 'Cash') {
+            const date = inv.date;
+            if (!dailyCash[date]) dailyCash[date] = 0;
+            dailyCash[date] += p.amount || 0;
+            
+            cashTransactions.push({
+              date: inv.date,
+              time: inv.time,
+              invoice: inv.number,
+              amount: p.amount,
+              store: getStore(inv.storeId)?.name || 'N/A'
+            });
+          }
+        });
+      });
+      
+      // Create CSV content
+      let csv = 'Cash Reconciliation Report\\n\\n';
+      csv += 'Daily Summary\\n';
+      csv += 'Date,Cash Amount\\n';
+      Object.entries(dailyCash)
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .forEach(([date, amount]) => {
+          csv += `${date},${amount.toFixed(2)}\\n`;
+        });
+      
+      csv += '\\n\\nDetailed Transactions\\n';
+      csv += 'Date,Time,Invoice,Amount,Store\\n';
+      cashTransactions
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .forEach(txn => {
+          csv += `${txn.date},${txn.time},${txn.invoice},${txn.amount.toFixed(2)},${txn.store}\\n`;
+        });
+      
+      // Download CSV
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cash-report-${today()}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      alert('Cash report exported successfully!');
+    };
+  }
 }
 
 /* ====== Low Stock Alerts & Auto-Reorder ====== */
@@ -2669,20 +3017,133 @@ function renderUsers(root){
 /* ====== Settings / Data ====== */
 function renderSettings(root){
   root.innerHTML = `
-    <div class="card">
-      <h3>Data & Settings</h3>
-      <div class="section stack">
-        <div class="row">
-          <button class="btn" id="btnDemo">Load Demo Data</button>
-          <button class="btn" id="btnBackup">Export Backup</button>
-          <input type="file" id="fileImport" style="display:none" accept="application/json">
-          <button class="btn" id="btnRestore">Import Backup</button>
-          <button class="btn red" id="btnClear">Clear All Data</button>
+    <div class="stack">
+      <div class="card">
+        <h3>💰 Cash Reconciliation</h3>
+        <div class="section">
+          <p class="muted" style="margin-bottom:16px;">Record opening and closing cash for daily reconciliation</p>
+          <div class="row" style="margin-bottom:16px;">
+            <select class="select" id="reconStore">
+              <option value="">Select Store</option>
+              ${db.stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+            </select>
+            <input class="input" id="reconDate" type="date" value="${today()}">
+          </div>
+          <div class="row" style="margin-bottom:16px;">
+            <input class="input" id="openingCash" placeholder="Opening Cash" type="number" step="0.01">
+            <input class="input" id="closingCash" placeholder="Closing Cash" type="number" step="0.01">
+          </div>
+          <div class="row">
+            <button class="btn green" id="saveRecon">Save Reconciliation</button>
+          </div>
         </div>
-        <div class="muted">For e‑invoice/e‑way bill integration, push invoices server‑side to NIC via your provider; client-only apps cannot securely hold credentials.</div>
+        <div class="section">
+          <h4 style="margin:0 0 12px 0;font-size:14px;">Recent Reconciliations</h4>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Store</th>
+                  <th class="right">Opening</th>
+                  <th class="right">Cash Sales</th>
+                  <th class="right">Closing</th>
+                  <th class="right">Variance</th>
+                </tr>
+              </thead>
+              <tbody id="reconBody">
+                ${(db.cashReconciliation || []).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10).map(recon => {
+                  const store = getStore(recon.storeId);
+                  const variance = recon.closingCash - (recon.openingCash + recon.expectedCash);
+                  return `
+                    <tr>
+                      <td>${recon.date}</td>
+                      <td>${store?.name || 'N/A'}</td>
+                      <td class="right mono">₹${money(recon.openingCash)}</td>
+                      <td class="right mono">₹${money(recon.expectedCash)}</td>
+                      <td class="right mono">₹${money(recon.closingCash)}</td>
+                      <td class="right mono" style="color:${Math.abs(variance) < 1 ? 'var(--good)' : 'var(--danger)'}">
+                        ${variance >= 0 ? '+' : ''}₹${money(variance)}
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="6" class="muted">No reconciliation records yet.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3>Data & Settings</h3>
+        <div class="section stack">
+          <div class="row">
+            <button class="btn" id="btnDemo">Load Demo Data</button>
+            <button class="btn" id="btnBackup">Export Backup</button>
+            <input type="file" id="fileImport" style="display:none" accept="application/json">
+            <button class="btn" id="btnRestore">Import Backup</button>
+            <button class="btn red" id="btnClear">Clear All Data</button>
+          </div>
+          <div class="muted">For e‑invoice/e‑way bill integration, push invoices server‑side to NIC via your provider; client-only apps cannot securely hold credentials.</div>
+        </div>
       </div>
     </div>
   `;
+  
+  $('#saveRecon').onclick = async () => {
+    const storeId = $('#reconStore').value;
+    const date = $('#reconDate').value;
+    const openingCash = parseFloat($('#openingCash').value) || 0;
+    const closingCash = parseFloat($('#closingCash').value) || 0;
+    
+    if (!storeId) return alert('Please select a store');
+    if (!date) return alert('Please select a date');
+    
+    // Calculate expected cash from sales
+    const salesInvoices = db.invoices.filter(inv => 
+      inv.date === date && 
+      inv.storeId === storeId && 
+      !inv.number?.startsWith('REF-')
+    );
+    
+    let expectedCash = 0;
+    salesInvoices.forEach(inv => {
+      const payments = Array.isArray(inv.payments) ? inv.payments : [inv.payments];
+      payments.forEach(p => {
+        if (p.mode === 'Cash') {
+          expectedCash += p.amount || 0;
+        }
+      });
+    });
+    
+    // Check if reconciliation already exists for this date/store
+    const existingIndex = db.cashReconciliation.findIndex(r => 
+      r.date === date && r.storeId === storeId
+    );
+    
+    const reconciliation = {
+      id: existingIndex >= 0 ? db.cashReconciliation[existingIndex].id : uid(),
+      date,
+      storeId,
+      openingCash,
+      closingCash,
+      expectedCash,
+      variance: closingCash - (openingCash + expectedCash),
+      recordedBy: currentUser ? currentUser.id : null,
+      recordedAt: new Date().toISOString()
+    };
+    
+    if (existingIndex >= 0) {
+      db.cashReconciliation[existingIndex] = reconciliation;
+    } else {
+      db.cashReconciliation.push(reconciliation);
+    }
+    
+    await save();
+    alert('Cash reconciliation saved successfully!');
+    renderSettings(root);
+  };
+  
   $('#btnDemo').onclick=async ()=>{ loadDemo(); await save(); alert('Demo data loaded'); open('dashboard'); };
   $('#btnBackup').onclick=()=>{
     const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
