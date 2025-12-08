@@ -781,13 +781,12 @@ function renderLoginScreen() {
   
   viewElement.innerHTML = `
     <div class="card" style="max-width: 400px; margin: 48px auto;">
-      <h3>Login / Sign Up</h3>
+      <h3>Login</h3>
       <div class="section stack">
         <input id="email" type="email" class="input" placeholder="Email">
         <input id="password" type="password" class="input" placeholder="Password">
         <div class="row">
           <button id="loginBtn" class="btn">Login</button>
-          <button id="signupBtn" class="btn secondary">Sign Up</button>
         </div>
         <div id="authMessage" class="muted" style="margin-top: 8px;"></div>
       </div>
@@ -795,7 +794,6 @@ function renderLoginScreen() {
   `;
   
   const loginBtn = $('#loginBtn');
-  const signupBtn = $('#signupBtn');
   const authMessage = $('#authMessage');
   
   if (loginBtn) {
@@ -806,23 +804,6 @@ function renderLoginScreen() {
         if (emailInput && passwordInput) {
           await auth.signInWithEmailAndPassword(emailInput.value, passwordInput.value);
           authMessage.textContent = 'Login successful!';
-          authMessage.style.color = 'var(--good)';
-        }
-      } catch (error) {
-        authMessage.textContent = error.message;
-        authMessage.style.color = 'var(--danger)';
-      }
-    };
-  }
-  
-  if (signupBtn) {
-    signupBtn.onclick = async () => {
-      try {
-        const emailInput = $('#email');
-        const passwordInput = $('#password');
-        if (emailInput && passwordInput) {
-          await auth.createUserWithEmailAndPassword(emailInput.value, passwordInput.value);
-          authMessage.textContent = 'Account created successfully!';
           authMessage.style.color = 'var(--good)';
         }
       } catch (error) {
