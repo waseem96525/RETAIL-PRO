@@ -1700,126 +1700,568 @@ function renderPOS(root){
   updatePaymentSummary();
 }
 
-/* ====== Returns ====== */
+/* ====== Returns & Exchange ====== */
 function renderReturns(root) {
   root.innerHTML = `
-    <div class="card">
-      <h3>Exchange & Refund</h3>
-      <div class="section">
-        <div class="row">
-          <input class="input" id="returnInvSearch" placeholder="Enter Invoice Number">
-          <button class="btn" id="returnFindInv">Find Invoice</button>
+    <div class="stack">
+      <div class="card">
+        <h3>🔄 Exchange & Refund Management</h3>
+        <div class="section">
+          <div class="row">
+            <input class="input" id="returnInvSearch" placeholder="Enter Invoice Number" style="flex:2">
+            <button class="btn" id="returnFindInv">🔍 Find Invoice</button>
+          </div>
+        </div>
+        <div id="returnInvDetails" class="section"></div>
+      </div>
+      
+      <div class="card" id="exchangeHistoryCard">
+        <h3>📋 Recent Exchanges & Returns</h3>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Original Invoice</th>
+                  <th>Customer</th>
+                  <th class="right">Return Value</th>
+                  <th class="right">Exchange Value</th>
+                  <th class="right">Difference</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${db.invoices.filter(inv => inv.number?.startsWith('REF-') || inv.number?.startsWith('EXC-'))
+                  .sort((a, b) => b.date.localeCompare(a.date))
+                  .slice(0, 20)
+                  .map(inv => {
+                    const isExchange = inv.number?.startsWith('EXC-');
+                    const customer = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
+                    const originalInv = db.invoices.find(i => i.id === inv.relatedInvoiceId);
+                    const returnValue = Math.abs(inv.returnValue || inv.totals?.total || 0);
+                    const exchangeValue = inv.exchangeValue || 0;
+                    const difference = exchangeValue - returnValue;
+                    
+                    return `
+                      <tr>
+                        <td>${inv.date} ${inv.time || ''}</td>
+                        <td>
+                          <span class="badge" style="background:${isExchange ? 'var(--accent)' : 'var(--danger)'}">
+                            ${isExchange ? 'Exchange' : 'Refund'}
+                          </span>
+                        </td>
+                        <td>${originalInv?.number || 'N/A'}</td>
+                        <td>${customer?.name || 'Walk-in'}</td>
+                        <td class="right mono">₹${money(returnValue)}</td>
+                        <td class="right mono">${isExchange ? '₹' + money(exchangeValue) : '-'}</td>
+                        <td class="right mono" style="color:${difference > 0 ? 'var(--good)' : difference < 0 ? 'var(--danger)' : 'var(--muted)'}">
+                          ${isExchange ? (difference >= 0 ? '+' : '') + '₹' + money(difference) : '-'}
+                        </td>
+                        <td class="right">
+                          <button class="btn secondary" data-id="${inv.id}">View</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('') || '<tr><td colspan="8" class="muted" style="text-align:center;">No exchanges or returns yet.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      <div id="returnInvDetails" class="section"></div>
     </div>
   `;
 
   $('#returnFindInv').onclick = () => {
     const invNumber = $('#returnInvSearch').value.trim();
-    if (!invNumber) return;
+    if (!invNumber) return alert('Please enter an invoice number');
 
     const invoice = db.invoices.find(inv => inv.number === invNumber);
     const detailsContainer = $('#returnInvDetails');
 
-    if (invoice) {
+    if (invoice && !invoice.number?.startsWith('REF-') && !invoice.number?.startsWith('EXC-')) {
       const store = getStore(invoice.storeId);
+      const customer = invoice.customerId ? db.customers.find(c => c.id === invoice.customerId) : null;
+      
       detailsContainer.innerHTML = `
-        <h4>Invoice Details</h4>
-        <div class="chips">
-          <span class="chip">Invoice: ${invoice.number}</span>
-          <span class="chip">Date: ${invoice.date} ${invoice.time}</span>
-          <span class="chip">Store: ${store ? store.name : 'N/A'}</span>
-          <span class="chip">Total: ₹${money(invoice.totals?.total)}</span>
+        <div style="background:var(--panel-2);padding:16px;border-radius:8px;margin-bottom:16px;">
+          <h4 style="margin:0 0 12px 0;">Invoice Details</h4>
+          <div class="chips">
+            <span class="chip">Invoice: ${invoice.number}</span>
+            <span class="chip">Date: ${invoice.date} ${invoice.time}</span>
+            <span class="chip">Store: ${store ? store.name : 'N/A'}</span>
+            <span class="chip">Customer: ${customer?.name || 'Walk-in'}</span>
+            <span class="chip">Total: ₹${money(invoice.totals?.total)}</span>
+          </div>
         </div>
-        <div class="table-container" style="margin-top: 16px;">
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Variant</th>
-                <th class="right">Price</th>
-                <th class="right">Qty</th>
-                <th class="right">Return Qty</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              ${(invoice.items || []).map((item, index) => `
+        
+        <div class="row" style="margin-bottom:16px;gap:12px;">
+          <button class="btn" id="switchToRefund" style="flex:1;background:var(--gradient-danger);">💰 Refund Mode</button>
+          <button class="btn" id="switchToExchange" style="flex:1;background:var(--gradient-primary);">🔄 Exchange Mode</button>
+        </div>
+        
+        <div id="returnMode">
+          <h4>Select Items to Return</h4>
+          <div class="table-container" style="margin-top: 16px;">
+            <table>
+              <thead>
                 <tr>
-                  <td>${getProduct(item.productId)?.name || 'N/A'}</td>
-                  <td>${item.size}/${item.color}</td>
-                  <td class="right">₹${money(item.price)}</td>
-                  <td class="right">${item.qty}</td>
-                  <td class="right"><input class="input" type="number" min="0" max="${item.qty}" value="0" style="width: 80px;" data-index="${index}"></td>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th class="right">Price</th>
+                  <th class="right">Qty</th>
+                  <th class="right">Return Qty</th>
+                  <th class="right">Return Value</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody id="returnItemsBody">
+                ${(invoice.items || []).map((item, index) => {
+                  const product = getProduct(item.productId);
+                  return `
+                    <tr>
+                      <td><strong>${product?.name || 'N/A'}</strong></td>
+                      <td>${item.size}/${item.color}</td>
+                      <td class="right mono">₹${money(item.price)}</td>
+                      <td class="right">${item.qty}</td>
+                      <td class="right">
+                        <input class="input return-qty-input" type="number" min="0" max="${item.qty}" value="0" 
+                               style="width: 80px;" data-index="${index}" data-price="${item.price}">
+                      </td>
+                      <td class="right mono return-value" data-index="${index}">₹0.00</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div style="background:var(--panel-2);padding:16px;border-radius:8px;margin-top:16px;">
+            <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:bold;">
+              <span>Total Return Value:</span>
+              <span id="totalReturnValue" class="mono" style="color:var(--danger);">₹0.00</span>
+            </div>
+          </div>
+          
+          <div class="row" style="margin-top: 16px;">
+            <button class="btn red" id="processRefund">💰 Process Refund</button>
+          </div>
         </div>
-        <div class="row" style="margin-top: 16px;">
-          <button class="btn red" id="processRefund">Process Refund</button>
-        </div>
-        <div class="muted" style="margin-top: 16px;">
-          For exchanges, please first process a refund for the returned items and then create a new bill from the POS for the new items.
+        
+        <div id="exchangeMode" style="display:none;">
+          <div class="grid">
+            <div>
+              <h4>Items to Return</h4>
+              <div class="table-container" style="margin-top: 12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Variant</th>
+                      <th class="right">Price</th>
+                      <th class="right">Return Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody id="exchangeReturnBody">
+                    ${(invoice.items || []).map((item, index) => {
+                      const product = getProduct(item.productId);
+                      return `
+                        <tr>
+                          <td>${product?.name || 'N/A'}</td>
+                          <td>${item.size}/${item.color}</td>
+                          <td class="right mono">₹${money(item.price)}</td>
+                          <td class="right">
+                            <input class="input exchange-return-qty" type="number" min="0" max="${item.qty}" 
+                                   value="0" style="width: 70px;" data-index="${index}" 
+                                   data-product-id="${item.productId}" data-price="${item.price}"
+                                   data-size="${item.size}" data-color="${item.color}">
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div style="background:var(--panel-2);padding:12px;border-radius:8px;margin-top:12px;">
+                <div style="display:flex;justify-content:space-between;">
+                  <span><strong>Return Value:</strong></span>
+                  <span id="exchangeReturnValue" class="mono" style="color:var(--danger);font-weight:bold;">₹0.00</span>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4>New Items (Exchange)</h4>
+              <div style="margin-bottom:12px;">
+                <input class="input" id="exchangeSearch" placeholder="Search product to add">
+              </div>
+              <div id="exchangeNewItems" style="max-height:300px;overflow-y:auto;">
+                <!-- Exchange items will be added here -->
+              </div>
+              <div style="background:var(--panel-2);padding:12px;border-radius:8px;margin-top:12px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                  <span><strong>Exchange Value:</strong></span>
+                  <span id="exchangeNewValue" class="mono" style="color:var(--good);font-weight:bold;">₹0.00</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;">
+                  <span><strong>Difference:</strong></span>
+                  <span id="exchangeDifference" class="mono" style="font-weight:bold;font-size:16px;">₹0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row" style="margin-top: 16px;">
+            <button class="btn green" id="processExchange">🔄 Complete Exchange</button>
+          </div>
         </div>
       `;
 
+      const exchangeCart = [];
+      
+      // Update return values on input change
+      $$('.return-qty-input').forEach(input => {
+        input.oninput = () => {
+          const index = input.dataset.index;
+          const qty = parseFloat(input.value) || 0;
+          const price = parseFloat(input.dataset.price) || 0;
+          const value = qty * price;
+          
+          $(`.return-value[data-index="${index}"]`).textContent = '₹' + money(value);
+          
+          // Update total
+          let total = 0;
+          $$('.return-qty-input').forEach(inp => {
+            const q = parseFloat(inp.value) || 0;
+            const p = parseFloat(inp.dataset.price) || 0;
+            total += q * p;
+          });
+          $('#totalReturnValue').textContent = '₹' + money(total);
+        };
+      });
+      
+      // Exchange mode calculations
+      function updateExchangeValues() {
+        let returnVal = 0;
+        $$('.exchange-return-qty').forEach(inp => {
+          const q = parseFloat(inp.value) || 0;
+          const p = parseFloat(inp.dataset.price) || 0;
+          returnVal += q * p;
+        });
+        
+        let exchangeVal = 0;
+        exchangeCart.forEach(item => {
+          exchangeVal += item.price * item.qty;
+        });
+        
+        const diff = exchangeVal - returnVal;
+        
+        $('#exchangeReturnValue').textContent = '₹' + money(returnVal);
+        $('#exchangeNewValue').textContent = '₹' + money(exchangeVal);
+        $('#exchangeDifference').textContent = (diff >= 0 ? '+' : '') + '₹' + money(diff);
+        $('#exchangeDifference').style.color = diff > 0 ? 'var(--good)' : diff < 0 ? 'var(--danger)' : 'var(--muted)';
+      }
+      
+      $$('.exchange-return-qty').forEach(input => {
+        input.oninput = updateExchangeValues;
+      });
+      
+      // Search products for exchange
+      $('#exchangeSearch').oninput = () => {
+        const query = $('#exchangeSearch').value.toLowerCase();
+        if (query.length < 2) {
+          $('#exchangeNewItems').innerHTML = '<div class="muted" style="padding:12px;">Type to search products...</div>';
+          return;
+        }
+        
+        const matches = db.products.filter(p => 
+          p.name.toLowerCase().includes(query) || 
+          (p.sku && p.sku.toLowerCase().includes(query))
+        ).slice(0, 10);
+        
+        if (matches.length === 0) {
+          $('#exchangeNewItems').innerHTML = '<div class="muted" style="padding:12px;">No products found.</div>';
+          return;
+        }
+        
+        $('#exchangeNewItems').innerHTML = matches.map(p => {
+          const variants = p.variants && p.variants.length ? p.variants : [{size:'STD', color:'STD'}];
+          return `
+            <div class="card" style="margin-bottom:8px;padding:12px;">
+              <div style="margin-bottom:8px;">
+                <strong>${p.name}</strong>
+                <span class="muted" style="font-size:12px;margin-left:8px;">${p.sku || ''}</span>
+                <div class="mono" style="color:var(--good);font-weight:bold;">₹${money(p.price)}</div>
+              </div>
+              <div class="chips">
+                ${variants.map(v => `
+                  <button class="chip" style="cursor:pointer;" 
+                          data-pid="${p.id}" data-name="${p.name}" data-price="${p.price}"
+                          data-size="${v.size}" data-color="${v.color}">
+                    ${v.size}/${v.color}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        // Add click handlers to variant chips
+        $('#exchangeNewItems').querySelectorAll('.chip').forEach(chip => {
+          chip.onclick = () => {
+            const item = {
+              productId: chip.dataset.pid,
+              name: chip.dataset.name,
+              price: parseFloat(chip.dataset.price),
+              size: chip.dataset.size,
+              color: chip.dataset.color,
+              qty: 1
+            };
+            
+            // Check if already in cart
+            const existing = exchangeCart.find(i => 
+              i.productId === item.productId && 
+              i.size === item.size && 
+              i.color === item.color
+            );
+            
+            if (existing) {
+              existing.qty++;
+            } else {
+              exchangeCart.push(item);
+            }
+            
+            renderExchangeCart();
+            updateExchangeValues();
+          };
+        });
+      };
+      
+      function renderExchangeCart() {
+        if (exchangeCart.length === 0) {
+          $('#exchangeNewItems').innerHTML = '<div class="muted" style="padding:12px;">Search and add products to exchange</div>';
+          return;
+        }
+        
+        $('#exchangeNewItems').innerHTML = `
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th class="right">Price</th>
+                  <th class="right">Qty</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${exchangeCart.map((item, idx) => `
+                  <tr>
+                    <td>${item.name}</td>
+                    <td>${item.size}/${item.color}</td>
+                    <td class="right mono">₹${money(item.price)}</td>
+                    <td class="right">
+                      <input class="input" type="number" min="1" value="${item.qty}" 
+                             style="width:60px;" data-idx="${idx}">
+                    </td>
+                    <td class="right">
+                      <button class="btn red" style="padding:4px 8px;font-size:12px;" data-idx="${idx}">×</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        
+        // Qty change handlers
+        $('#exchangeNewItems').querySelectorAll('input[type="number"]').forEach(inp => {
+          inp.oninput = () => {
+            const idx = parseInt(inp.dataset.idx);
+            exchangeCart[idx].qty = parseInt(inp.value) || 1;
+            updateExchangeValues();
+          };
+        });
+        
+        // Remove handlers
+        $('#exchangeNewItems').querySelectorAll('button[data-idx]').forEach(btn => {
+          btn.onclick = () => {
+            exchangeCart.splice(parseInt(btn.dataset.idx), 1);
+            renderExchangeCart();
+            updateExchangeValues();
+          };
+        });
+      }
+      
+      // Switch modes
+      $('#switchToRefund').onclick = () => {
+        $('#returnMode').style.display = 'block';
+        $('#exchangeMode').style.display = 'none';
+        $('#switchToRefund').style.opacity = '1';
+        $('#switchToExchange').style.opacity = '0.6';
+      };
+      
+      $('#switchToExchange').onclick = () => {
+        $('#returnMode').style.display = 'none';
+        $('#exchangeMode').style.display = 'block';
+        $('#switchToRefund').style.opacity = '0.6';
+        $('#switchToExchange').style.opacity = '1';
+        renderExchangeCart();
+      };
+
+      // Process refund
       $('#processRefund').onclick = async () => {
         const returnItems = [];
         let refundAmount = 0;
 
-        // First, validate all inputs
+        // Validate
         for (const [index, item] of (invoice.items || []).entries()) {
-          const returnQty = +$(`input[data-index="${index}"]`).value;
+          const returnQty = +$(`.return-qty-input[data-index="${index}"]`).value;
           if (returnQty > item.qty) {
-            alert(`Return quantity for ${getProduct(item.productId)?.name || 'item'} (${returnQty}) cannot exceed original quantity of ${item.qty}.`);
+            alert(`Return quantity for ${getProduct(item.productId)?.name || 'item'} cannot exceed original quantity.`);
             return;
-          }
-          if (returnQty < 0) {
-             alert(`Return quantity cannot be negative.`);
-             return;
           }
         }
         
-        let hasItemsToReturn = false;
-        // If validation passes, process the return
+        // Process
         (invoice.items || []).forEach((item, index) => {
-          const returnQty = +$(`input[data-index="${index}"]`).value;
+          const returnQty = +$(`.return-qty-input[data-index="${index}"]`).value;
           if (returnQty > 0) {
-            hasItemsToReturn = true;
-            returnItems.push({ ...item, returnQty });
-            refundAmount += item.price * returnQty; 
+            returnItems.push({ ...item, qty: returnQty });
+            refundAmount += item.price * returnQty;
             adjustStock(invoice.storeId, item.productId, item.size, item.color, returnQty);
           }
         });
 
-        if (hasItemsToReturn) {
-          // Create a refund record
-          const refundInvoice = {
-            id: uid(),
-            date: today(),
-            time: new Date().toLocaleTimeString(),
-            storeId: invoice.storeId,
-            number: `REF-${invoice.number}`,
-            relatedInvoiceId: invoice.id,
-            items: returnItems,
-            totals: { sub: -refundAmount, tax: 0, total: -refundAmount, round: 0 },
-            payments: [{ mode: 'Refund', amount: -refundAmount, reference: '', timestamp: new Date().toISOString() }],
-            notes: `Refund for invoice ${invoice.number}`
-          };
-          db.invoices.push(refundInvoice);
-          await save();
-          alert(`Refund of ₹${money(refundAmount)} processed successfully.`);
-          open('returns');
-        } else {
-          alert('No items selected for return.');
+        if (returnItems.length === 0) {
+          return alert('Please select items to return.');
         }
+
+        const refundInvoice = {
+          id: uid(),
+          date: today(),
+          time: new Date().toLocaleTimeString(),
+          storeId: invoice.storeId,
+          number: `REF-${invoice.number}`,
+          relatedInvoiceId: invoice.id,
+          customerId: invoice.customerId,
+          items: returnItems,
+          returnValue: refundAmount,
+          totals: { sub: -refundAmount, tax: 0, total: -refundAmount, round: 0 },
+          payments: [{ mode: 'Refund', amount: -refundAmount, reference: '', timestamp: new Date().toISOString() }],
+          notes: `Refund for invoice ${invoice.number}`
+        };
+        
+        db.invoices.push(refundInvoice);
+        await save();
+        alert(`Refund of ₹${money(refundAmount)} processed successfully!`);
+        renderReturns(root);
       };
+
+      // Process exchange
+      $('#processExchange').onclick = async () => {
+        const returnItems = [];
+        let returnValue = 0;
+
+        // Validate returns
+        (invoice.items || []).forEach((item, index) => {
+          const returnQty = +$(`.exchange-return-qty[data-index="${index}"]`).value;
+          if (returnQty > 0) {
+            returnItems.push({ ...item, qty: returnQty });
+            returnValue += item.price * returnQty;
+            adjustStock(invoice.storeId, item.productId, item.size, item.color, returnQty);
+          }
+        });
+
+        if (returnItems.length === 0) {
+          return alert('Please select items to return.');
+        }
+        
+        if (exchangeCart.length === 0) {
+          return alert('Please add items for exchange.');
+        }
+        
+        // Check stock availability
+        for (const item of exchangeCart) {
+          const available = stockQty(invoice.storeId, item.productId, item.size, item.color);
+          if (item.qty > available) {
+            return alert(`Insufficient stock for ${item.name} (${item.size}/${item.color}). Available: ${available}`);
+          }
+        }
+        
+        let exchangeValue = 0;
+        exchangeCart.forEach(item => {
+          exchangeValue += item.price * item.qty;
+          adjustStock(invoice.storeId, item.productId, item.size, item.color, -item.qty);
+        });
+        
+        const difference = exchangeValue - returnValue;
+        
+        // Create exchange invoice
+        const exchangeInvoice = {
+          id: uid(),
+          date: today(),
+          time: new Date().toLocaleTimeString(),
+          storeId: invoice.storeId,
+          number: `EXC-${invoice.number}-${uid().slice(0,4)}`,
+          relatedInvoiceId: invoice.id,
+          customerId: invoice.customerId,
+          cashierId: currentUser ? currentUser.id : null,
+          items: exchangeCart.map(item => ({
+            productId: item.productId,
+            size: item.size,
+            color: item.color,
+            qty: item.qty,
+            price: item.price,
+            taxPct: 0,
+            discount: 0
+          })),
+          returnedItems: returnItems,
+          returnValue: returnValue,
+          exchangeValue: exchangeValue,
+          totals: { sub: difference, tax: 0, total: difference, round: 0 },
+          payments: difference > 0 ? [{ mode: 'Cash', amount: difference, reference: '', timestamp: new Date().toISOString() }] : 
+                    difference < 0 ? [{ mode: 'Refund', amount: difference, reference: '', timestamp: new Date().toISOString() }] :
+                    [{ mode: 'Exchange', amount: 0, reference: '', timestamp: new Date().toISOString() }],
+          notes: `Exchange from invoice ${invoice.number}. Return value: ₹${money(returnValue)}, Exchange value: ₹${money(exchangeValue)}`
+        };
+        
+        db.invoices.push(exchangeInvoice);
+        await save();
+        
+        let message = `Exchange completed successfully!\n\n`;
+        message += `Return Value: ₹${money(returnValue)}\n`;
+        message += `Exchange Value: ₹${money(exchangeValue)}\n`;
+        if (difference > 0) {
+          message += `\nCustomer pays: ₹${money(difference)}`;
+        } else if (difference < 0) {
+          message += `\nRefund to customer: ₹${money(Math.abs(difference))}`;
+        } else {
+          message += `\nEven exchange (no payment required)`;
+        }
+        
+        alert(message);
+        renderReturns(root);
+      };
+      
+    } else if (invoice) {
+      detailsContainer.innerHTML = '<div class="muted">This is a refund/exchange invoice. Please enter an original sales invoice number.</div>';
     } else {
       detailsContainer.innerHTML = '<div class="muted">Invoice not found.</div>';
     }
   };
+  
+  // View transaction details
+  $$('button[data-id]').forEach(btn => {
+    btn.onclick = () => {
+      const invId = btn.dataset.id;
+      const inv = db.invoices.find(i => i.id === invId);
+      if (inv) {
+        printInvoice(inv);
+      }
+    };
+  });
 }
 
 
