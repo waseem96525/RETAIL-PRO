@@ -333,6 +333,7 @@ const DBKEY='clothix.db.v1';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 let db = load() || initDB();
+let currentUser = null; // Tracks logged-in user with role
 
 function initDB() {
   return {
@@ -383,29 +384,50 @@ function uid(){ return Math.random().toString(36).slice(2,10); }
 function today(){ const d=new Date(); return d.toISOString().slice(0,10); }
 
 /* ====== Navigation ====== */
-const sections = [
-  {id:'dashboard',label:'Dashboard', icon: '📊'},
-  {id:'stores',label:'Stores', icon: '🏪'},
-  {id:'catalog',label:'Products', icon: '📦'},
-  {id:'stock',label:'Inventory', icon: '📝'},
-  {id:'purchase',label:'Purchase', icon: '📥'},
-  {id:'transfer',label:'Transfer', icon: '✈️'},
-  {id:'pos',label:'POS Billing', icon: '🛒'},
-  {id:'returns',label:'Returns', icon: '↩️'},
-  {id:'customers',label:'Customers', icon: '👥'},
-  {id:'users',label:'Users', icon: '👤'},
-  {id:'reports',label:'Reports', icon: '📈'},
-  {id:'settings',label:'Settings', icon: '⚙️'}
+const allSections = [
+  {id:'dashboard',label:'Dashboard', icon: '📊', roles: ['admin', 'manager']},
+  {id:'stores',label:'Stores', icon: '🏪', roles: ['admin', 'manager']},
+  {id:'catalog',label:'Products', icon: '📦', roles: ['admin', 'manager', 'stockkeeper']},
+  {id:'stock',label:'Inventory', icon: '📝', roles: ['admin', 'manager', 'stockkeeper']},
+  {id:'purchase',label:'Purchase', icon: '📥', roles: ['admin', 'manager', 'stockkeeper']},
+  {id:'transfer',label:'Transfer', icon: '✈️', roles: ['admin', 'manager', 'stockkeeper']},
+  {id:'pos',label:'POS Billing', icon: '🛒', roles: ['admin', 'manager', 'cashier']},
+  {id:'returns',label:'Returns', icon: '↩️', roles: ['admin', 'manager', 'cashier']},
+  {id:'customers',label:'Customers', icon: '👥', roles: ['admin', 'manager', 'cashier']},
+  {id:'users',label:'Users', icon: '👤', roles: ['admin']},
+  {id:'reports',label:'Reports', icon: '📈', roles: ['admin', 'manager']},
+  {id:'settings',label:'Settings', icon: '⚙️', roles: ['admin']}
 ];
 const tabsEl = $('#tabs');
-sections.forEach(s=>{
-  const b=document.createElement('button');
-  b.innerHTML = `${s.icon} ${s.label}`; b.className='tab'; b.onclick=()=>open(s.id);
-  b.dataset.id=s.id; tabsEl.appendChild(b);
-});
+
+function renderTabs() {
+  if (!tabsEl) return;
+  tabsEl.innerHTML = '';
+  const userRole = currentUser ? currentUser.role : 'admin';
+  const sections = allSections.filter(s => !s.roles || s.roles.includes(userRole));
+  sections.forEach(s=>{
+    const b=document.createElement('button');
+    b.innerHTML = `${s.icon} ${s.label}`; b.className='tab'; b.onclick=()=>open(s.id);
+    b.dataset.id=s.id; tabsEl.appendChild(b);
+  });
+}
 function setActive(id){ $$('#tabs .tab').forEach(t=>t.classList.toggle('active',t.dataset.id===id)); }
 function open(id){
   console.log(`Opening section: ${id}`);
+  
+  // Check if user has permission to access this section
+  const userRole = currentUser ? currentUser.role : 'admin';
+  const section = allSections.find(s => s.id === id);
+  if (section && section.roles && !section.roles.includes(userRole)) {
+    alert(`Access Denied: You don't have permission to access ${section.label}. Your role: ${userRole}`);
+    // Redirect to default page for role
+    const defaultPage = userRole === 'cashier' ? 'pos' : userRole === 'stockkeeper' ? 'stock' : 'dashboard';
+    if (id !== defaultPage) {
+      open(defaultPage);
+    }
+    return;
+  }
+  
   setActive(id);
   const v=$('#view'); v.innerHTML='';
   const renderers = {
@@ -495,33 +517,62 @@ auth.onAuthStateChanged(async user => {
   
   if (user) {
     // User is signed in
-    if (tabsElement) tabsElement.style.display = 'flex';
-    
-    if (userControls) {
-      userControls.innerHTML = '';
-      const userDisplay = document.createElement('span');
-      userDisplay.className = 'chip';
-      userDisplay.textContent = user.email;
-
-      const logoutBtn = document.createElement('button');
-      logoutBtn.className = 'btn secondary';
-      logoutBtn.textContent = 'Logout';
-      logoutBtn.onclick = () => auth.signOut();
-
-      userControls.append(userDisplay, logoutBtn);
-    }
-    
     try {
       db = await load();
-      open('dashboard');
+      
+      // Find user in database by email
+      currentUser = db.users.find(u => u.email === user.email);
+      
+      // If user not found in database, assign default admin role for backwards compatibility
+      if (!currentUser) {
+        currentUser = {
+          id: uid(),
+          email: user.email,
+          role: 'admin',
+          name: user.email.split('@')[0],
+          status: 'active',
+          createdAt: today()
+        };
+        db.users.push(currentUser);
+        await save();
+      }
+      
+      // Render tabs based on user role
+      renderTabs();
+      if (tabsElement) tabsElement.style.display = 'flex';
+      
+      if (userControls) {
+        userControls.innerHTML = '';
+        const userDisplay = document.createElement('span');
+        userDisplay.className = 'chip';
+        userDisplay.textContent = `${currentUser.name || user.email} (${currentUser.role})`;
+
+        const logoutBtn = document.createElement('button');
+        logoutBtn.className = 'btn secondary';
+        logoutBtn.textContent = 'Logout';
+        logoutBtn.onclick = () => {
+          currentUser = null;
+          auth.signOut();
+        };
+
+        userControls.append(userDisplay, logoutBtn);
+      }
+      
+      // Open default page based on role
+      const defaultPage = currentUser.role === 'cashier' ? 'pos' : 
+                         currentUser.role === 'stockkeeper' ? 'stock' : 'dashboard';
+      open(defaultPage);
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Error loading data. Starting with empty database.');
       db = initDB();
+      currentUser = null;
+      renderTabs();
       open('dashboard');
     }
   } else {
     // User is signed out
+    currentUser = null;
     renderLoginScreen();
     if (tabsElement) tabsElement.style.display = 'none';
   }
