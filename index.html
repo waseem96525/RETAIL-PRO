@@ -273,6 +273,29 @@
     .grid{grid-template-columns:1fr}
     .split{grid-template-columns:1fr}
   }
+  
+  /* Toast notification animations */
+  @keyframes slideIn {
+    from {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideOut {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(400px);
+      opacity: 0;
+    }
+  }
 
 </style>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -290,6 +313,10 @@
     </div>
     <div class="tabs" id="tabs"></div>
     <div class="toolbar">
+      <div id="online-status" class="chip" style="display:flex;align-items:center;gap:6px;padding:6px 12px;">
+        <span id="status-indicator" style="width:8px;height:8px;border-radius:50%;background:var(--good);"></span>
+        <span id="status-text">Online</span>
+      </div>
       <button class="btn" id="theme-toggle">🌙</button>
       <button class="btn secondary" id="exportBtn">Export</button>
       <button class="btn secondary" id="importBtn">Import</button>
@@ -332,8 +359,52 @@ purchases: [{id,date,storeId,ref,items:[{productId,size,color,qty,cost}], note}]
 const DBKEY='clothix.db.v1';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
-let db = load() || initDB();
+
+// Offline mode variables (declare first!)
+let isOnline = navigator.onLine;
+let syncQueue = [];
+let lastSyncTime = null;
+const STORAGE_KEY = 'clothix_db';
+const SYNC_QUEUE_KEY = 'clothix_sync_queue';
+const LAST_SYNC_KEY = 'clothix_last_sync';
+
+// Initialize offline mode
+syncQueue = loadSyncQueue();
+lastSyncTime = localStorage.getItem(LAST_SYNC_KEY);
+
+// Load database (async)
+let db = null;
 let currentUser = null; // Tracks logged-in user with role
+
+// Initialize app
+(async function() {
+  db = await load();
+  
+  // Update status on load
+  updateOnlineStatus(isOnline, syncQueue.length === 0);
+  
+  // Initialize UI
+  initApp();
+})();
+
+function initApp() {
+  // Set up manual sync button  
+  const statusEl = $('#online-status');
+  if (statusEl) {
+    statusEl.style.cursor = 'pointer';
+    statusEl.onclick = async () => {
+      if (!isOnline) {
+        showNotification('Cannot sync while offline', 'warn');
+        return;
+      }
+      if (syncQueue.length === 0) {
+        showNotification('Everything is already synced', 'info');
+        return;
+      }
+      await syncToFirebase();
+    };
+  }
+}
 
 function initDB() {
   return {
@@ -352,42 +423,280 @@ function initDB() {
   };
 }
 
-async function save() {
+// Save to local storage (always)
+function saveLocal() {
   try {
-    await database.ref('db').set(db);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+    localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
+    return true;
   } catch (error) {
-    console.error("Error saving to Firebase:", error);
+    console.error('Error saving to local storage:', error);
+    return false;
   }
 }
 
-async function load() {
+// Load from local storage
+function loadLocal() {
   try {
-    const snapshot = await database.ref('db').once('value');
-    let data = snapshot.val();
-    if (!data) {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      lastSyncTime = localStorage.getItem(LAST_SYNC_KEY);
+      return parsed;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error loading from local storage:', error);
+    return null;
+  }
+}
+
+// Save sync queue
+function saveSyncQueue() {
+  try {
+    localStorage.setItem(SYNC_QUEUE_KEY, JSON.stringify(syncQueue));
+  } catch (error) {
+    console.error('Error saving sync queue:', error);
+  }
+}
+
+// Load sync queue
+function loadSyncQueue() {
+  try {
+    const data = localStorage.getItem(SYNC_QUEUE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (error) {
+    console.error('Error loading sync queue:', error);
+    return [];
+  }
+}
+
+// Main save function (works offline and online)
+async function save() {
+  // Always save locally first
+  saveLocal();
+  
+  // If online, sync to Firebase
+  if (isOnline) {
+    try {
+      await database.ref('db').set(db);
+      lastSyncTime = new Date().toISOString();
+      updateOnlineStatus(true, true);
+      
+      // Clear sync queue on successful save
+      if (syncQueue.length > 0) {
+        syncQueue = [];
+        saveSyncQueue();
+      }
+    } catch (error) {
+      console.error("Error saving to Firebase:", error);
+      // Add to sync queue if online but Firebase fails
+      addToSyncQueue('full_sync', db);
+      updateOnlineStatus(true, false);
+    }
+  } else {
+    // Offline: add to sync queue
+    addToSyncQueue('full_sync', db);
+    updateOnlineStatus(false);
+  }
+}
+
+// Add operation to sync queue
+function addToSyncQueue(operation, data) {
+  syncQueue.push({
+    id: uid(),
+    operation: operation,
+    data: JSON.parse(JSON.stringify(data)), // Deep clone
+    timestamp: new Date().toISOString()
+  });
+  saveSyncQueue();
+}
+
+async function load() {
+  // Try loading from local storage first (instant)
+  const localData = loadLocal();
+  
+  if (isOnline) {
+    try {
+      const snapshot = await database.ref('db').once('value');
+      let data = snapshot.val();
+      
+      if (!data) {
+        // No Firebase data, use local or init
+        if (localData) {
+          console.log('Using local storage data (Firebase empty)');
+          return ensureDataStructure(localData);
+        }
+        return initDB();
+      }
+      
+      // Compare timestamps to use most recent data
+      const firebaseTime = data.lastModified || 0;
+      const localTime = lastSyncTime || 0;
+      
+      if (localData && localTime > firebaseTime) {
+        console.log('Local data is newer, syncing to Firebase...');
+        await database.ref('db').set(localData);
+        return ensureDataStructure(localData);
+      }
+      
+      console.log('Loaded data from Firebase');
+      return ensureDataStructure(data);
+      
+    } catch (error) {
+      console.error("Error loading from Firebase:", error);
+      
+      // Fallback to local storage
+      if (localData) {
+        console.log('Firebase failed, using local storage');
+        updateOnlineStatus(true, false);
+        return ensureDataStructure(localData);
+      }
+      
       return initDB();
     }
-    // Ensure all expected arrays exist
-    data.stores = data.stores || [];
-    data.products = data.products || [];
-    data.stock = data.stock || [];
-    data.alerts = data.alerts || [];
-    data.reorderSuggestions = data.reorderSuggestions || [];
-    data.cashReconciliation = data.cashReconciliation || [];
-    data.customers = data.customers || [];
-    data.invoices = data.invoices || [];
-    data.transfers = data.transfers || [];
-    data.purchases = data.purchases || [];
-    data.users = data.users || [];
-    data.seq = data.seq || {inv:1,trn:1,pur:1};
-    return data;
-  } catch (error) {
-    console.error("Error loading from Firebase:", error);
+  } else {
+    // Offline mode
+    console.log('Offline mode: using local storage');
+    updateOnlineStatus(false);
+    
+    if (localData) {
+      return ensureDataStructure(localData);
+    }
     return initDB();
   }
 }
+
+// Ensure data structure has all required fields
+function ensureDataStructure(data) {
+  data.stores = data.stores || [];
+  data.products = data.products || [];
+  data.stock = data.stock || [];
+  data.alerts = data.alerts || [];
+  data.reorderSuggestions = data.reorderSuggestions || [];
+  data.cashReconciliation = data.cashReconciliation || [];
+  data.customers = data.customers || [];
+  data.invoices = data.invoices || [];
+  data.transfers = data.transfers || [];
+  data.purchases = data.purchases || [];
+  data.users = data.users || [];
+  data.seq = data.seq || {inv:1,trn:1,pur:1};
+  return data;
+}
 function uid(){ return Math.random().toString(36).slice(2,10); }
 function today(){ const d=new Date(); return d.toISOString().slice(0,10); }
+
+// Update online status indicator
+function updateOnlineStatus(online, synced = true) {
+  isOnline = online;
+  const indicator = $('#status-indicator');
+  const text = $('#status-text');
+  const statusEl = $('#online-status');
+  
+  if (!indicator || !text) return;
+  
+  if (online) {
+    if (synced) {
+      indicator.style.background = 'var(--good)';
+      text.textContent = 'Online';
+      text.style.color = 'var(--good)';
+      statusEl.title = `Connected to Firebase\nLast sync: ${lastSyncTime ? new Date(lastSyncTime).toLocaleString() : 'Just now'}`;
+    } else {
+      indicator.style.background = 'var(--warn)';
+      text.textContent = 'Syncing...';
+      text.style.color = 'var(--warn)';
+      statusEl.title = 'Connection available but sync pending';
+    }
+  } else {
+    indicator.style.background = 'var(--danger)';
+    text.textContent = 'Offline';
+    text.style.color = 'var(--danger)';
+    const queueCount = syncQueue.length;
+    statusEl.title = `Offline Mode\n${queueCount} change${queueCount !== 1 ? 's' : ''} pending sync`;
+  }
+}
+
+// Sync pending changes to Firebase
+async function syncToFirebase() {
+  if (!isOnline || syncQueue.length === 0) return;
+  
+  console.log(`Syncing ${syncQueue.length} pending changes...`);
+  updateOnlineStatus(true, false);
+  
+  try {
+    // Sync the full database state
+    await database.ref('db').set(db);
+    
+    // Clear sync queue on success
+    syncQueue = [];
+    saveSyncQueue();
+    lastSyncTime = new Date().toISOString();
+    localStorage.setItem(LAST_SYNC_KEY, lastSyncTime);
+    
+    updateOnlineStatus(true, true);
+    console.log('Sync completed successfully');
+    
+    // Show notification
+    showNotification('✅ All changes synced to cloud', 'success');
+  } catch (error) {
+    console.error('Sync failed:', error);
+    updateOnlineStatus(true, false);
+    showNotification('⚠️ Sync failed. Will retry automatically.', 'warn');
+  }
+}
+
+// Show notification toast
+function showNotification(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: ${type === 'success' ? 'var(--good)' : type === 'warn' ? 'var(--warn)' : 'var(--accent)'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+    font-weight: 500;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// Monitor connection status
+window.addEventListener('online', async () => {
+  console.log('Connection restored');
+  isOnline = true;
+  updateOnlineStatus(true, false);
+  showNotification('🌐 Connection restored. Syncing...', 'success');
+  
+  // Wait a moment for connection to stabilize
+  setTimeout(async () => {
+    await syncToFirebase();
+  }, 1000);
+});
+
+window.addEventListener('offline', () => {
+  console.log('Connection lost');
+  isOnline = false;
+  updateOnlineStatus(false);
+  showNotification('📱 Working offline. Changes will sync when online.', 'warn');
+});
+
+// Periodic sync check (every 30 seconds)
+setInterval(() => {
+  if (isOnline && syncQueue.length > 0) {
+    syncToFirebase();
+  }
+}, 30000);
 
 /* ====== Navigation ====== */
 const allSections = [
@@ -523,78 +832,6 @@ function renderLoginScreen() {
     };
   }
 }
-
-auth.onAuthStateChanged(async user => {
-  const userControls = $('#user-controls');
-  const tabsElement = $('#tabs');
-  
-  if (user) {
-    // User is signed in
-    try {
-      db = await load();
-      
-      // Find user in database by email
-      currentUser = db.users.find(u => u.email === user.email);
-      
-      // If user not found in database, assign default admin role for backwards compatibility
-      if (!currentUser) {
-        currentUser = {
-          id: uid(),
-          email: user.email,
-          role: 'admin',
-          name: user.email.split('@')[0],
-          status: 'active',
-          createdAt: today()
-        };
-        db.users.push(currentUser);
-        await save();
-      }
-      
-      // Render tabs based on user role
-      renderTabs();
-      if (tabsElement) tabsElement.style.display = 'flex';
-      
-      if (userControls) {
-        userControls.innerHTML = '';
-        const userDisplay = document.createElement('span');
-        userDisplay.className = 'chip';
-        userDisplay.textContent = `${currentUser.name || user.email} (${currentUser.role})`;
-
-        const logoutBtn = document.createElement('button');
-        logoutBtn.className = 'btn secondary';
-        logoutBtn.textContent = 'Logout';
-        logoutBtn.onclick = () => {
-          currentUser = null;
-          auth.signOut();
-        };
-
-        userControls.append(userDisplay, logoutBtn);
-      }
-      
-      // Open default page based on role
-      const defaultPage = currentUser.role === 'cashier' ? 'pos' : 
-                         currentUser.role === 'stockkeeper' ? 'stock' : 'dashboard';
-      open(defaultPage);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      alert('Error loading data. Starting with empty database.');
-      db = initDB();
-      currentUser = null;
-      renderTabs();
-      open('dashboard');
-    }
-  } else {
-    // User is signed out
-    currentUser = null;
-    renderLoginScreen();
-    if (tabsElement) tabsElement.style.display = 'none';
-  }
-});
-
-(async () => {
-  // Auth state listener will handle initialization
-})();
-
 
 /* ====== Helpers ====== */
 function money(n){ return (n||0).toFixed(2); }
@@ -3517,6 +3754,47 @@ function renderSettings(root){
       </div>
       
       <div class="card">
+        <h3>🌐 Offline Mode & Sync Status</h3>
+        <div class="section stack">
+          <div style="background:var(--panel-2);padding:16px;border-radius:8px;margin-bottom:16px;">
+            <div class="row" style="align-items:center;margin-bottom:12px;">
+              <div>
+                <div style="font-weight:bold;margin-bottom:4px;">Connection Status</div>
+                <div id="syncStatus" class="muted"></div>
+              </div>
+              <div id="syncIndicator" style="width:48px;height:48px;border-radius:50%;background:var(--good);"></div>
+            </div>
+            <div class="row" style="font-size:14px;">
+              <div>
+                <span class="muted">Pending Changes:</span>
+                <strong id="pendingCount" style="margin-left:8px;"></strong>
+              </div>
+              <div>
+                <span class="muted">Last Sync:</span>
+                <strong id="lastSync" style="margin-left:8px;"></strong>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <button class="btn green" id="btnManualSync">🔄 Sync Now</button>
+            <button class="btn secondary" id="btnClearLocal">Clear Local Cache</button>
+          </div>
+          
+          <div style="background:var(--panel-2);padding:12px;border-radius:8px;margin-top:16px;">
+            <h4 style="margin:0 0 8px 0;font-size:14px;">How Offline Mode Works</h4>
+            <ul style="margin:0;padding-left:20px;font-size:13px;line-height:1.6;" class="muted">
+              <li>All changes are saved locally first (instant)</li>
+              <li>When online, data syncs to Firebase automatically</li>
+              <li>If offline, changes queue and sync when connection returns</li>
+              <li>App works fully offline - no connection required</li>
+              <li>Click the status indicator in header for quick sync</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
         <h3>Data & Settings</h3>
         <div class="section stack">
           <div class="row">
@@ -3586,6 +3864,55 @@ function renderSettings(root){
     renderSettings(root);
   };
   
+  // Update sync status display
+  function updateSyncDisplay() {
+    const statusEl = $('#syncStatus');
+    const indicatorEl = $('#syncIndicator');
+    const pendingEl = $('#pendingCount');
+    const lastSyncEl = $('#lastSync');
+    
+    if (statusEl && indicatorEl && pendingEl && lastSyncEl) {
+      if (isOnline) {
+        statusEl.textContent = syncQueue.length === 0 ? 'Connected & Synced' : 'Connected - Syncing...';
+        indicatorEl.style.background = syncQueue.length === 0 ? 'var(--good)' : 'var(--warn)';
+      } else {
+        statusEl.textContent = 'Offline - Changes saved locally';
+        indicatorEl.style.background = 'var(--danger)';
+      }
+      
+      pendingEl.textContent = syncQueue.length;
+      lastSyncEl.textContent = lastSyncTime ? new Date(lastSyncTime).toLocaleString() : 'Never';
+    }
+  }
+  
+  updateSyncDisplay();
+  
+  // Manual sync button
+  $('#btnManualSync').onclick = async () => {
+    if (!isOnline) {
+      showNotification('Cannot sync while offline', 'warn');
+      return;
+    }
+    
+    if (syncQueue.length === 0) {
+      showNotification('Everything is already synced!', 'success');
+      return;
+    }
+    
+    await syncToFirebase();
+    updateSyncDisplay();
+  };
+  
+  // Clear local cache
+  $('#btnClearLocal').onclick = () => {
+    if (confirm('Clear local cache? This will force a fresh sync from Firebase on next load.')) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(SYNC_QUEUE_KEY);
+      localStorage.removeItem(LAST_SYNC_KEY);
+      showNotification('Local cache cleared. Refresh the page.', 'success');
+    }
+  };
+  
   $('#btnDemo').onclick=async ()=>{ loadDemo(); await save(); alert('Demo data loaded'); open('dashboard'); };
   $('#btnBackup').onclick=()=>{
     const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
@@ -3642,9 +3969,75 @@ $('#exportBtn').onclick=()=>{ const blob=new Blob([JSON.stringify(db,null,2)],{t
 $('#importBtn').onclick=()=>{ const inp=document.createElement('input'); inp.type='file'; inp.accept='application/json'; inp.onchange=async (e)=>{ const f=e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=async ()=>{ try{ db=JSON.parse(r.result); await save(); alert('Imported'); open('dashboard'); }catch(e){ alert('Invalid file'); } }; r.readAsText(f); }; inp.click(); };
 $('#demoBtn').onclick=async ()=>{ loadDemo(); await save(); open('dashboard'); };
 $('#resetBtn').onclick=async ()=>{ if(confirm('Clear all data?')){ db=initDB(); await save(); open('dashboard'); } };
+
+auth.onAuthStateChanged(async user => {
+  const userControls = $('#user-controls');
+  const tabsElement = $('#tabs');
+  
+  if (user) {
+    // User is signed in
+    try {
+      db = await load();
+      
+      // Find user in database by email
+      currentUser = db.users.find(u => u.email === user.email);
+      
+      // If user not found in database, assign default admin role for backwards compatibility
+      if (!currentUser) {
+        currentUser = {
+          id: uid(),
+          email: user.email,
+          role: 'admin',
+          name: user.email.split('@')[0],
+          status: 'active',
+          createdAt: today()
+        };
+        db.users.push(currentUser);
+        await save();
+      }
+      
+      // Render tabs based on user role
+      renderTabs();
+      if (tabsElement) tabsElement.style.display = 'flex';
+      
+      if (userControls) {
+        userControls.innerHTML = '';
+        const userDisplay = document.createElement('span');
+        userDisplay.className = 'chip';
+        userDisplay.textContent = `${currentUser.name || user.email} (${currentUser.role})`;
+
+        const logoutBtn = document.createElement('button');
+        logoutBtn.className = 'btn secondary';
+        logoutBtn.textContent = 'Logout';
+        logoutBtn.onclick = () => {
+          currentUser = null;
+          auth.signOut();
+        };
+
+        userControls.append(userDisplay, logoutBtn);
+      }
+      
+      // Open default page based on role
+      const defaultPage = currentUser.role === 'cashier' ? 'pos' : 
+                         currentUser.role === 'stockkeeper' ? 'stock' : 'dashboard';
+      open(defaultPage);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      alert('Error loading data. Starting with empty database.');
+      db = initDB();
+      currentUser = null;
+      renderTabs();
+      open('dashboard');
+    }
+  } else {
+    // User is signed out
+    currentUser = null;
+    renderLoginScreen();
+    if (tabsElement) tabsElement.style.display = 'none';
+  }
 });
-</script>
-<script>
+
+// Theme toggle
 const themeToggle = document.getElementById('theme-toggle');
 const htmlEl = document.documentElement;
 
@@ -3659,18 +4052,22 @@ if (savedTheme) {
     themeToggle.textContent = '🌙';
 }
 
+if (themeToggle) {
+  themeToggle.addEventListener('click', () => {
+      if (htmlEl.getAttribute('data-theme') === 'dark') {
+          htmlEl.setAttribute('data-theme', 'light');
+          themeToggle.textContent = '🌙';
+          localStorage.setItem('theme', 'light');
+      } else {
+          htmlEl.setAttribute('data-theme', 'dark');
+          themeToggle.textContent = '☀️';
+          localStorage.setItem('theme', 'dark');
+      }
+  });
+}
 
-themeToggle.addEventListener('click', () => {
-    if (htmlEl.getAttribute('data-theme') === 'dark') {
-        htmlEl.setAttribute('data-theme', 'light');
-        themeToggle.textContent = '🌙';
-        localStorage.setItem('theme', 'light');
-    } else {
-        htmlEl.setAttribute('data-theme', 'dark');
-        themeToggle.textContent = '☀️';
-        localStorage.setItem('theme', 'dark');
-    }
-});
+}); // End DOMContentLoaded
+
 </script>
 </body>
 </html>

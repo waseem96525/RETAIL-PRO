@@ -36,37 +36,90 @@
   body::before{content:'';position:fixed;top:0;left:0;right:0;height:400px;background:var(--bg);z-index:-1}
   header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);box-shadow:var(--shadow);border-bottom:1px solid var(--border)}
   [data-theme="dark"] header{background:rgba(30,41,59,0.95)}
-  .bar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;max-width:1400px;margin:0 auto}
+  .bar{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 16px;max-width:1400px;margin:0 auto;flex-wrap:wrap}
   @media (max-width: 768px) {
     .bar {
       flex-direction: column;
-      align-items: flex-start;
+      align-items: stretch;
+      gap:16px;
+    }
+    .tabs{
+      width:100%;
+      justify-content:flex-start;
+    }
+    .toolbar{
+      width:100%;
+      justify-content:space-between;
     }
   }
   .brand{display:flex;gap:12px;align-items:center}
   .logo{width:48px;height:48px;border-radius:12px;background:var(--gradient-primary);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:bold;color:white;box-shadow:0 4px 6px -1px rgba(102,126,234,0.4);transition:transform .2s}
   .logo:hover{transform:scale(1.05)}
   .brand h1{font-size:22px;margin:0;font-weight:700;background:var(--gradient-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  @media (max-width: 480px) {
+    .logo{width:40px;height:40px;font-size:20px}
+    .brand h1{font-size:18px}
+    .brand .chip{display:none}
+  }
   .tabs{display:flex;gap:8px;flex-wrap:wrap}
   .tab{padding:10px 18px;border:none;background:transparent;color:var(--muted);border-radius:var(--radius);cursor:pointer;transition:all .3s ease;font-weight:500;position:relative}
+  @media (max-width: 768px) {
+    .tab{padding:8px 12px;font-size:14px}
+  }
+  @media (max-width: 480px) {
+    .tabs{gap:4px}
+    .tab{padding:6px 10px;font-size:12px;white-space:nowrap}
+  }
   .tab:hover{background:var(--chip);color:var(--text);transform:translateY(-2px)}
   .tab.active{background:var(--gradient-primary);color:white;box-shadow:var(--shadow);transform:translateY(-2px)}
   .tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:3px;background:white;border-radius:3px 3px 0 0}
   .container{max-width:1400px;margin:24px auto;padding:0 24px 48px}
+  @media (max-width: 768px) {
+    .container{padding:0 16px 32px;margin:16px auto}
+  }
+  @media (max-width: 480px) {
+    .container{padding:0 12px 24px;margin:12px auto}
+  }
   .grid{display:grid;grid-template-columns:300px 1fr;gap:24px}
   @media (max-width:960px){.grid{grid-template-columns:1fr}}
+  @media (max-width: 768px) {
+    .grid{gap:16px}
+  }
   .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);transition:transform .3s,box-shadow .3s;overflow:hidden}
   .card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+  @media (max-width: 768px) {
+    .card{border-radius:8px}
+    .card:hover{transform:translateY(-2px)}
+  }
+  @media (max-width: 480px) {
+    .card{border-radius:6px}
+  }
   .card h3{margin:0;padding:20px;border-bottom:2px solid var(--border);font-size:18px;font-weight:700;background:linear-gradient(to right,var(--panel-2),var(--panel));position:relative}
   .card h3::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gradient-primary)}
   .section{padding:16px}
+  @media (max-width: 640px) {
+    .section{padding:12px}
+  }
   .stack{display:flex;flex-direction:column;gap:16px}
   .row{display:flex;gap:16px;flex-wrap:wrap}
+  @media (max-width: 640px) {
+    .row{gap:12px}
+    .row > *{flex:1 1 100%;min-width:0}
+  }
   input,select,button,textarea{font:inherit;transition:all .2s}
   .input,.select{flex:1;min-width:180px;background:var(--panel);border:2px solid var(--border);color:var(--text);padding:12px 16px;border-radius:var(--radius);outline:0;transition:all .3s ease;font-weight:500}
+  @media (max-width: 640px) {
+    .input,.select{min-width:100%;padding:10px 12px;font-size:16px}
+  }
   .input:focus,.select:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(99,102,241,.1);transform:translateY(-1px)}
   .input:hover,.select:hover{border-color:var(--muted)}
   .btn{background:var(--gradient-primary);border:none;color:white;padding:12px 24px;border-radius:var(--radius);cursor:pointer;font-weight:600;transition:all .3s ease;box-shadow:0 4px 6px -1px rgba(102,126,234,0.3);position:relative;overflow:hidden}
+  @media (max-width: 640px) {
+    .btn{padding:10px 16px;font-size:14px}
+  }
+  @media (max-width: 480px) {
+    .btn{padding:8px 12px;font-size:13px}
+  }
   .btn::before{content:'';position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;background:rgba(255,255,255,0.3);transform:translate(-50%,-50%);transition:width .6s,height .6s}
   .btn:hover{transform:translateY(-2px);box-shadow:0 10px 15px -3px rgba(102,126,234,0.4)}
   .btn:hover::before{width:300px;height:300px}
@@ -77,11 +130,20 @@
   .btn.red{background:var(--gradient-danger);box-shadow:0 4px 6px -1px rgba(239,68,68,0.3)}
   .btn:disabled{opacity:.6;cursor:not-allowed}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap}
+  @media (max-width: 640px) {
+    .toolbar{gap:6px}
+  }
   .chips{display:flex;gap:8px;flex-wrap:wrap}
   .chip{padding:8px 16px;border-radius:20px;background:var(--chip);border:1px solid var(--border);color:var(--muted);font-weight:600;font-size:13px;transition:all .2s}
   .chip:hover{transform:scale(1.05);box-shadow:var(--shadow)}
   table{width:100%;border-collapse:collapse}
   th,td{padding:12px 16px;border-bottom:1px solid var(--border)}
+  @media (max-width: 768px) {
+    th,td{padding:10px 12px;font-size:14px}
+  }
+  @media (max-width: 480px) {
+    th,td{padding:8px;font-size:13px}
+  }
   th{color:var(--muted);text-align:left;background:var(--panel-2);font-weight:600;position:sticky;top:0}
   tbody tr{transition:all .2s ease}
   tbody tr:hover{background:var(--panel-2);transform:scale(1.01);box-shadow:0 2px 4px rgba(0,0,0,0.05)}
@@ -95,7 +157,13 @@
   .status.out{background:rgba(239,68,68,0.1);color:var(--danger)}
   .split{display:grid;grid-template-columns:1fr 460px;gap:24px}
   @media (max-width:1100px){.split{grid-template-columns:1fr}}
+  @media (max-width: 768px) {
+    .split{gap:16px}
+  }
   .totals{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  @media (max-width: 640px) {
+    .totals{grid-template-columns:1fr;gap:10px}
+  }
   .totals .kpi{background:var(--panel-2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .3s;position:relative;overflow:hidden}
   .totals .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--gradient-primary);opacity:0;transition:opacity .3s}
   .totals .kpi:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
@@ -106,9 +174,36 @@
   .link{color:var(--accent);text-decoration:none;cursor:pointer}
   .link:hover{text-decoration:underline}
   .footer{margin-top:24px;color:var(--muted);font-size:14px;text-align:center}
+  @media (max-width: 640px) {
+    .footer{font-size:12px;padding:0 8px;line-height:1.6}
+  }
   .table-container{overflow-x:auto}
+  @media (max-width: 768px) {
+    .table-container{
+      -webkit-overflow-scrolling:touch;
+      border-radius:var(--radius);
+    }
+    table{
+      min-width:600px;
+    }
+  }
   .modal-backdrop{display:none;position:fixed;z-index:100;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgba(0,0,0,0.6)}
   .modal-content{background-color:var(--panel);color:var(--text);margin:10% auto;padding:24px;border:1px solid var(--border);width:80%;max-width:600px;border-radius:var(--radius);box-shadow:0 5px 15px rgba(0,0,0,0.5)}
+  @media (max-width: 768px) {
+    .modal-content{
+      width:90%;
+      margin:5% auto;
+      padding:20px;
+    }
+  }
+  @media (max-width: 480px) {
+    .modal-content{
+      width:95%;
+      margin:2% auto;
+      padding:16px;
+      border-radius:8px;
+    }
+  }
   .modal-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:16px;margin-bottom:16px}
   .modal-header h2{margin:0;font-size:22px}
   .modal-close{color:var(--muted);font-size:32px;font-weight:bold;cursor:pointer;transition:color .2s}
@@ -118,13 +213,13 @@
   @media print {
     @page {
       size: A4;
-      margin: 0.5in;
+      margin: 10mm;
     }
     body * {
       visibility: hidden;
     }
     #preview-content, #preview-content * {
-      visibility: visible;
+      visibility: visible !important;
     }
     #preview-content {
       position: absolute;
@@ -132,13 +227,53 @@
       top: 0;
       width: 100%;
     }
-    /* Ensure good print quality */
-    * {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      color-adjust: exact !important;
+    .modal-backdrop {
+      background: none !important;
+      position: static !important;
+    }
+    .modal-content {
+      box-shadow: none !important;
+      border: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    .modal-header, .modal-footer {
+      display: none !important;
     }
   }
+  
+  /* Additional Mobile Optimizations */
+  @media (max-width: 640px) {
+    body{font-size:14px}
+    .chip{padding:6px 12px;font-size:12px}
+    .badge{padding:4px 10px;font-size:10px}
+    .status{padding:3px 10px;font-size:11px}
+    .kpi h4{font-size:12px}
+    .kpi .val{font-size:24px}
+  }
+  
+  /* Touch-friendly targets on mobile */
+  @media (hover: none) and (pointer: coarse) {
+    .btn, .tab, button{
+      min-height:44px;
+      min-width:44px;
+    }
+  }
+  
+  /* Landscape mobile optimization */
+  @media (max-width: 960px) and (orientation: landscape) {
+    .container{margin:12px auto;padding:0 16px 24px}
+    header{position:relative}
+  }
+  
+  /* Tablet-specific adjustments */
+  @media (min-width: 641px) and (max-width: 1024px) {
+    .grid{grid-template-columns:1fr}
+    .split{grid-template-columns:1fr}
+  }
+
 </style>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -198,6 +333,7 @@ const DBKEY='clothix.db.v1';
 const $ = sel => document.querySelector(sel);
 const $$ = sel => Array.from(document.querySelectorAll(sel));
 let db = load() || initDB();
+let currentUser = null; // Tracks logged-in user with role
 
 function initDB() {
   return {
@@ -209,6 +345,9 @@ function initDB() {
     transfers: [],
     purchases: [],
     users: [],
+    alerts: [],
+    reorderSuggestions: [],
+    cashReconciliation: [],
     seq: {inv:1,trn:1,pur:1}
   };
 }
@@ -232,6 +371,9 @@ async function load() {
     data.stores = data.stores || [];
     data.products = data.products || [];
     data.stock = data.stock || [];
+    data.alerts = data.alerts || [];
+    data.reorderSuggestions = data.reorderSuggestions || [];
+    data.cashReconciliation = data.cashReconciliation || [];
     data.customers = data.customers || [];
     data.invoices = data.invoices || [];
     data.transfers = data.transfers || [];
@@ -248,33 +390,61 @@ function uid(){ return Math.random().toString(36).slice(2,10); }
 function today(){ const d=new Date(); return d.toISOString().slice(0,10); }
 
 /* ====== Navigation ====== */
-const sections = [
-  {id:'dashboard',label:'Dashboard', icon: '📊'},
-  {id:'stores',label:'Stores', icon: '🏪'},
-  {id:'catalog',label:'Products', icon: '📦'},
-  {id:'stock',label:'Inventory', icon: '📝'},
-  {id:'purchase',label:'Purchase', icon: '📥'},
-  {id:'transfer',label:'Transfer', icon: '✈️'},
-  {id:'pos',label:'POS Billing', icon: '🛒'},
-  {id:'returns',label:'Returns', icon: '↩️'},
-  {id:'customers',label:'Customers', icon: '👥'},
-  {id:'users',label:'Users', icon: '👤'},
-  {id:'reports',label:'Reports', icon: '📈'},
-  {id:'settings',label:'Settings', icon: '⚙️'}
+const allSections = [
+  {id:'dashboard',label:'Dashboard', icon: '📊', roles: ['admin', 'manager']},
+  {id:'alerts',label:'Alerts', icon: '🔔', roles: ['admin', 'manager', 'stockkeeper']},
+  {id:'stores',label:'Stores', icon: '🏪', roles: ['admin', 'manager']},
+  {id:'catalog',label:'Products', icon: '📦', roles: ['admin', 'manager', 'stockkeeper']},
+  {id:'stock',label:'Inventory', icon: '📝', roles: ['admin', 'manager', 'stockkeeper']},
+  {id:'purchase',label:'Purchase', icon: '📥', roles: ['admin', 'manager', 'stockkeeper']},
+  {id:'transfer',label:'Transfer', icon: '✈️', roles: ['admin', 'manager', 'stockkeeper']},
+  {id:'pos',label:'POS Billing', icon: '🛒', roles: ['admin', 'manager', 'cashier']},
+  {id:'returns',label:'Returns', icon: '↩️', roles: ['admin', 'manager', 'cashier']},
+  {id:'customers',label:'Customers', icon: '👥', roles: ['admin', 'manager', 'cashier']},
+  {id:'users',label:'Users', icon: '👤', roles: ['admin']},
+  {id:'reports',label:'Reports', icon: '📈', roles: ['admin', 'manager']},
+  {id:'settings',label:'Settings', icon: '⚙️', roles: ['admin']}
 ];
 const tabsEl = $('#tabs');
-sections.forEach(s=>{
-  const b=document.createElement('button');
-  b.innerHTML = `${s.icon} ${s.label}`; b.className='tab'; b.onclick=()=>open(s.id);
-  b.dataset.id=s.id; tabsEl.appendChild(b);
-});
+
+function renderTabs() {
+  if (!tabsEl) return;
+  tabsEl.innerHTML = '';
+  const userRole = currentUser ? currentUser.role : 'admin';
+  const sections = allSections.filter(s => !s.roles || s.roles.includes(userRole));
+  const activeAlerts = db.alerts ? db.alerts.filter(a => a.status === 'active').length : 0;
+  sections.forEach(s=>{
+    const b=document.createElement('button');
+    let label = `${s.icon} ${s.label}`;
+    if (s.id === 'alerts' && activeAlerts > 0) {
+      label += ` <span style="background:var(--danger);color:white;padding:2px 6px;border-radius:10px;font-size:11px;margin-left:4px;">${activeAlerts}</span>`;
+    }
+    b.innerHTML = label; b.className='tab'; b.onclick=()=>open(s.id);
+    b.dataset.id=s.id; tabsEl.appendChild(b);
+  });
+}
 function setActive(id){ $$('#tabs .tab').forEach(t=>t.classList.toggle('active',t.dataset.id===id)); }
 function open(id){
   console.log(`Opening section: ${id}`);
+  
+  // Check if user has permission to access this section
+  const userRole = currentUser ? currentUser.role : 'admin';
+  const section = allSections.find(s => s.id === id);
+  if (section && section.roles && !section.roles.includes(userRole)) {
+    alert(`Access Denied: You don't have permission to access ${section.label}. Your role: ${userRole}`);
+    // Redirect to default page for role
+    const defaultPage = userRole === 'cashier' ? 'pos' : userRole === 'stockkeeper' ? 'stock' : 'dashboard';
+    if (id !== defaultPage) {
+      open(defaultPage);
+    }
+    return;
+  }
+  
   setActive(id);
   const v=$('#view'); v.innerHTML='';
   const renderers = {
     dashboard: renderDashboard,
+    alerts: renderAlerts,
     stores: renderStores,
     catalog: renderCatalog,
     stock: renderStock,
@@ -360,33 +530,62 @@ auth.onAuthStateChanged(async user => {
   
   if (user) {
     // User is signed in
-    if (tabsElement) tabsElement.style.display = 'flex';
-    
-    if (userControls) {
-      userControls.innerHTML = '';
-      const userDisplay = document.createElement('span');
-      userDisplay.className = 'chip';
-      userDisplay.textContent = user.email;
-
-      const logoutBtn = document.createElement('button');
-      logoutBtn.className = 'btn secondary';
-      logoutBtn.textContent = 'Logout';
-      logoutBtn.onclick = () => auth.signOut();
-
-      userControls.append(userDisplay, logoutBtn);
-    }
-    
     try {
       db = await load();
-      open('dashboard');
+      
+      // Find user in database by email
+      currentUser = db.users.find(u => u.email === user.email);
+      
+      // If user not found in database, assign default admin role for backwards compatibility
+      if (!currentUser) {
+        currentUser = {
+          id: uid(),
+          email: user.email,
+          role: 'admin',
+          name: user.email.split('@')[0],
+          status: 'active',
+          createdAt: today()
+        };
+        db.users.push(currentUser);
+        await save();
+      }
+      
+      // Render tabs based on user role
+      renderTabs();
+      if (tabsElement) tabsElement.style.display = 'flex';
+      
+      if (userControls) {
+        userControls.innerHTML = '';
+        const userDisplay = document.createElement('span');
+        userDisplay.className = 'chip';
+        userDisplay.textContent = `${currentUser.name || user.email} (${currentUser.role})`;
+
+        const logoutBtn = document.createElement('button');
+        logoutBtn.className = 'btn secondary';
+        logoutBtn.textContent = 'Logout';
+        logoutBtn.onclick = () => {
+          currentUser = null;
+          auth.signOut();
+        };
+
+        userControls.append(userDisplay, logoutBtn);
+      }
+      
+      // Open default page based on role
+      const defaultPage = currentUser.role === 'cashier' ? 'pos' : 
+                         currentUser.role === 'stockkeeper' ? 'stock' : 'dashboard';
+      open(defaultPage);
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Error loading data. Starting with empty database.');
       db = initDB();
+      currentUser = null;
+      renderTabs();
       open('dashboard');
     }
   } else {
     // User is signed out
+    currentUser = null;
     renderLoginScreen();
     if (tabsElement) tabsElement.style.display = 'none';
   }
@@ -410,6 +609,80 @@ function adjustStock(storeId, productId, size, color, delta){
   let r = db.stock.find(s=>s.storeId===storeId && s.productId===productId && s.size===size && s.color===color);
   if(!r){ r={storeId,productId,size,color,qty:0,min:0}; db.stock.push(r); }
   r.qty = Math.max(0, (r.qty||0) + delta);
+  // Check if stock is now low
+  if (r.min > 0 && r.qty <= r.min) {
+    checkLowStock(storeId, productId, size, color);
+  }
+}
+
+function checkLowStock(storeId, productId, size, color) {
+  const stockItem = db.stock.find(s=>s.storeId===storeId && s.productId===productId && s.size===size && s.color===color);
+  if (!stockItem || stockItem.qty > stockItem.min) return;
+  
+  // Check if alert already exists
+  const alertKey = `${storeId}-${productId}-${size}-${color}`;
+  const existingAlert = db.alerts.find(a => a.key === alertKey && a.status === 'active');
+  if (existingAlert) return; // Already alerted
+  
+  // Calculate reorder quantity based on sales velocity
+  const salesVelocity = calculateSalesVelocity(productId, size, color);
+  const reorderQty = Math.max(stockItem.min * 2, Math.ceil(salesVelocity * 30)); // 30 days supply
+  
+  // Create alert
+  const alert = {
+    id: uid(),
+    key: alertKey,
+    type: 'low_stock',
+    status: 'active',
+    storeId,
+    productId,
+    size,
+    color,
+    currentQty: stockItem.qty,
+    minQty: stockItem.min,
+    reorderQty,
+    salesVelocity: salesVelocity.toFixed(2),
+    createdAt: new Date().toISOString(),
+    createdBy: currentUser ? currentUser.id : null
+  };
+  
+  db.alerts.push(alert);
+  
+  // Create reorder suggestion
+  const suggestion = {
+    id: uid(),
+    alertId: alert.id,
+    storeId,
+    productId,
+    size,
+    color,
+    suggestedQty: reorderQty,
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+  db.reorderSuggestions.push(suggestion);
+}
+
+function calculateSalesVelocity(productId, size, color) {
+  // Calculate average daily sales for last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().slice(0, 10);
+  
+  let totalSold = 0;
+  let daysWithSales = 0;
+  
+  db.invoices.forEach(inv => {
+    if (inv.date >= thirtyDaysAgoStr && !inv.number?.startsWith('REF-')) {
+      inv.items.forEach(item => {
+        if (item.productId === productId && item.size === size && item.color === color) {
+          totalSold += item.qty;
+        }
+      });
+    }
+  });
+  
+  return totalSold / 30; // Average per day
 }
 
 function printInvoice(inv) {
@@ -423,65 +696,61 @@ function printInvoice(inv) {
     previewContent.innerHTML = formatInvoice(inv, st);
     modal.style.display = 'block';
 
-    closeModal.onclick = () => {
+    const closeModalHandler = () => {
         modal.style.display = 'none';
+        cleanup();
     };
 
-    cancelBtn.onclick = () => {
-        modal.style.display = 'none';
-    };
-
-    printBtn.onclick = () => {
+    const printHandler = () => {
         window.print();
         modal.style.display = 'none';
+        cleanup();
     };
 
-    window.onclick = (event) => {
+    const windowClickHandler = (event) => {
         if (event.target == modal) {
             modal.style.display = 'none';
+            cleanup();
         }
     };
+
+    const cleanup = () => {
+        closeModal.removeEventListener('click', closeModalHandler);
+        cancelBtn.removeEventListener('click', closeModalHandler);
+        printBtn.removeEventListener('click', printHandler);
+        window.removeEventListener('click', windowClickHandler);
+    };
+
+    closeModal.addEventListener('click', closeModalHandler);
+    cancelBtn.addEventListener('click', closeModalHandler);
+    printBtn.addEventListener('click', printHandler);
+    window.addEventListener('click', windowClickHandler);
 }
 function formatInvoice(inv, store) {
     const cust = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
     let html = `
-        <div style="font-family: Arial, sans-serif; font-size: 14pt; color: black; width: 100%; max-width: 800px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; border-bottom: 3px double #000; padding-bottom: 15px; margin-bottom: 15px;">
-                <h2 style="margin: 0 0 10px 0; font-size: 24pt; font-weight: bold; text-transform: uppercase;">${store?.name || 'Clothix Retail'}</h2>
-                <p style="margin: 5px 0; font-size: 13pt;">${store?.address || ''}</p>
-                <p style="margin: 5px 0; font-size: 13pt;"><strong>Phone:</strong> ${store?.phone || ''}</p>
-                ${store?.code ? `<p style="margin: 5px 0; font-size: 12pt;"><strong>Store Code:</strong> ${store.code}</p>` : ''}
+        <div style="font-family: Arial, sans-serif; font-size: 9pt; width: 100%; max-width: 550px; margin: 0; padding: 5px; background: white; color: black;">
+            <div style="text-align: center; border-bottom: 1px solid black; padding-bottom: 3px; margin-bottom: 5px;">
+                <h2 style="margin: 0; font-size: 12pt; font-weight: bold; color: black;">${store?.name || 'Clothix Retail'}</h2>
+                <p style="margin: 1px 0; font-size: 8pt; color: black;">${store?.address || ''} | ${store?.phone || ''}</p>
             </div>
             
-            <div style="margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 8px;">
-                <table style="width: 100%; font-size: 13pt;">
-                    <tr>
-                        <td style="padding: 5px;"><strong>Invoice #:</strong></td>
-                        <td style="padding: 5px; text-align: right; font-weight: bold; font-size: 14pt;">${inv.number}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 5px;"><strong>Date & Time:</strong></td>
-                        <td style="padding: 5px; text-align: right;">${inv.date} ${inv.time}</td>
-                    </tr>
-                    ${cust ? `
-                    <tr>
-                        <td style="padding: 5px;"><strong>Customer:</strong></td>
-                        <td style="padding: 5px; text-align: right;">${cust.name}</td>
-                    </tr>
-                    ${cust.phone ? `<tr><td style="padding: 5px;"><strong>Phone:</strong></td><td style="padding: 5px; text-align: right;">${cust.phone}</td></tr>` : ''}
-                    ${cust.gstin ? `<tr><td style="padding: 5px;"><strong>GSTIN:</strong></td><td style="padding: 5px; text-align: right;">${cust.gstin}</td></tr>` : ''}
-                    ` : '<tr><td colspan="2" style="padding: 5px; text-align: center; font-style: italic;">Walk-in Customer</td></tr>'}
-                </table>
-            </div>
+            <table style="width: 100%; font-size: 8pt; margin: 3px 0; color: black;">
+                <tr>
+                    <td style="padding: 1px; color: black;"><strong>Invoice:</strong> ${inv.number}</td>
+                    <td style="padding: 1px; text-align: right; color: black;">${inv.date} ${inv.time}</td>
+                </tr>
+                ${cust ? `<tr><td colspan="2" style="padding: 1px; color: black;"><strong>Customer:</strong> ${cust.name}${cust.phone ? ' | ' + cust.phone : ''}</td></tr>` : '<tr><td colspan="2" style="padding: 1px; color: black;">Walk-in Customer</td></tr>'}
+            </table>
             
-            <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13pt;">
+            <table style="width: 100%; border-collapse: collapse; margin: 3px 0; font-size: 8pt; color: black;">
                 <thead>
-                    <tr style="background: #333; color: white;">
-                        <th style="text-align: left; padding: 12px 8px; border-bottom: 2px solid #000;">Item</th>
-                        <th style="text-align: center; padding: 12px 8px; border-bottom: 2px solid #000;">Qty</th>
-                        <th style="text-align: right; padding: 12px 8px; border-bottom: 2px solid #000;">Price</th>
-                        ${inv.items.some(it => it.discount > 0) ? '<th style="text-align: right; padding: 12px 8px; border-bottom: 2px solid #000;">Disc%</th>' : ''}
-                        <th style="text-align: right; padding: 12px 8px; border-bottom: 2px solid #000;">Total</th>
+                    <tr style="border-top: 1px solid black; border-bottom: 1px solid black; background: white;">
+                        <th style="text-align: left; padding: 2px; color: black;">Item</th>
+                        <th style="text-align: center; padding: 2px; color: black;">Qty</th>
+                        <th style="text-align: right; padding: 2px; color: black;">Price</th>
+                        ${inv.items.some(it => it.discount > 0) ? '<th style="text-align: right; padding: 2px; color: black;">Disc</th>' : ''}
+                        <th style="text-align: right; padding: 2px; color: black;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -492,18 +761,15 @@ function formatInvoice(inv, store) {
         const base = (it.price || 0) * (it.qty || 0);
         const disc = base * (it.discount || 0) / 100;
         const lineTotal = base - disc;
-        const bgColor = idx % 2 === 0 ? '#fff' : '#f9f9f9';
         html += `
-            <tr style="background: ${bgColor};">
-                <td style="padding: 10px 8px; border-bottom: 1px solid #ddd;">
-                    <strong>${p.name || 'N/A'}</strong><br>
-                    <span style="font-size: 11pt; color: #666;">Size: ${it.size} | Color: ${it.color}</span>
-                    ${p.sku ? `<br><span style="font-size: 10pt; color: #999;">SKU: ${p.sku}</span>` : ''}
+            <tr style="background: white;">
+                <td style="padding: 2px; border-bottom: 1px solid #ddd; color: black;">
+                    <strong>${p.name || 'N/A'}</strong> <span style="font-size: 7pt; color: #555;">(${it.size}/${it.color})</span>
                 </td>
-                <td style="text-align: center; padding: 10px 8px; border-bottom: 1px solid #ddd; font-weight: bold;">${it.qty}</td>
-                <td style="text-align: right; padding: 10px 8px; border-bottom: 1px solid #ddd;">₹${money(it.price)}</td>
-                ${inv.items.some(it => it.discount > 0) ? `<td style="text-align: right; padding: 10px 8px; border-bottom: 1px solid #ddd;">${it.discount > 0 ? it.discount + '%' : '-'}</td>` : ''}
-                <td style="text-align: right; padding: 10px 8px; border-bottom: 1px solid #ddd; font-weight: bold;">₹${money(lineTotal)}</td>
+                <td style="text-align: center; padding: 2px; border-bottom: 1px solid #ddd; color: black;">${it.qty}</td>
+                <td style="text-align: right; padding: 2px; border-bottom: 1px solid #ddd; color: black;">₹${money(it.price)}</td>
+                ${inv.items.some(it => it.discount > 0) ? `<td style="text-align: right; padding: 2px; border-bottom: 1px solid #ddd; color: black;">${it.discount > 0 ? it.discount + '%' : '-'}</td>` : ''}
+                <td style="text-align: right; padding: 2px; border-bottom: 1px solid #ddd; color: black;">₹${money(lineTotal)}</td>
             </tr>
         `;
     });
@@ -512,47 +778,40 @@ function formatInvoice(inv, store) {
                 </tbody>
             </table>
             
-            <div style="margin: 20px 0; padding: 15px; background: #f0f0f0; border-radius: 8px;">
-                <table style="width: 100%; font-size: 14pt;">
-                    <tr>
-                        <td style="padding: 8px; text-align: right;"><strong>Subtotal:</strong></td>
-                        <td style="padding: 8px; text-align: right; width: 150px;">₹ ${money(inv.totals.sub)}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px; text-align: right;"><strong>Tax (GST):</strong></td>
-                        <td style="padding: 8px; text-align: right;">₹ ${money(inv.totals.tax)}</td>
-                    </tr>
-                    ${inv.totals.round !== 0 ? `
-                    <tr>
-                        <td style="padding: 8px; text-align: right;"><strong>Rounding:</strong></td>
-                        <td style="padding: 8px; text-align: right;">₹ ${money(inv.totals.round)}</td>
-                    </tr>
-                    ` : ''}
-                    <tr style="border-top: 2px solid #000; background: #333; color: white;">
-                        <td style="padding: 12px; text-align: right; font-size: 16pt;"><strong>GRAND TOTAL:</strong></td>
-                        <td style="padding: 12px; text-align: right; font-size: 18pt; font-weight: bold;">₹ ${money(inv.totals.total)}</td>
-                    </tr>
-                </table>
+            <table style="width: 100%; font-size: 8pt; margin: 3px 0; color: black;">
+                <tr>
+                    <td style="padding: 1px; text-align: right; color: black;">Subtotal:</td>
+                    <td style="padding: 1px; text-align: right; width: 70px; color: black;">₹ ${money(inv.totals.sub)}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 1px; text-align: right; color: black;">Tax (GST):</td>
+                    <td style="padding: 1px; text-align: right; color: black;">₹ ${money(inv.totals.tax)}</td>
+                </tr>
+                ${inv.totals.round !== 0 ? `
+                <tr>
+                    <td style="padding: 1px; text-align: right; color: black;">Rounding:</td>
+                    <td style="padding: 1px; text-align: right; color: black;">₹ ${money(inv.totals.round)}</td>
+                </tr>
+                ` : ''}
+                <tr style="border-top: 1px solid black; font-weight: bold; background: white;">
+                    <td style="padding: 3px 1px; text-align: right; font-size: 10pt; color: black;">TOTAL:</td>
+                    <td style="padding: 3px 1px; text-align: right; font-size: 10pt; color: black;">₹ ${money(inv.totals.total)}</td>
+                </tr>
+            </table>
+            
+            <div style="margin: 3px 0; font-size: 8pt; color: black;">
+                <strong>Payment:</strong>
+                ${Array.isArray(inv.payments) ? 
+                  inv.payments.map(p => `${p.mode}: ₹${money(p.amount)}`).join(', ') :
+                  `${inv.payments.mode}${inv.payments.amount ? ' - ₹' + money(inv.payments.amount) : ''}`
+                }
             </div>
             
-            <div style="margin: 20px 0; padding: 15px; background: #fffbea; border-left: 4px solid #ffc107; border-radius: 4px;">
-                <p style="margin: 0; font-size: 13pt;"><strong>Payment Mode:</strong> ${inv.payments.mode}</p>
-                ${inv.payments.amount ? `<p style="margin: 5px 0 0 0; font-size: 13pt;"><strong>Amount Paid:</strong> ₹${money(inv.payments.amount)}</p>` : ''}
-            </div>
+            ${inv.notes ? `<p style="margin: 2px 0; font-size: 7pt; color: black;"><strong>Notes:</strong> ${inv.notes}</p>` : ''}
             
-            ${inv.notes ? `
-            <div style="margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 4px;">
-                <p style="margin: 0; font-size: 12pt;"><strong>Notes:</strong> ${inv.notes}</p>
-            </div>
-            ` : ''}
-            
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 2px dashed #999;">
-                <p style="margin: 10px 0; font-size: 16pt; font-weight: bold;">Thank You for Shopping!</p>
-                <p style="margin: 5px 0; font-size: 12pt; color: #666;">Please visit again</p>
-            </div>
-            
-            <div style="margin-top: 20px; text-align: center; font-size: 10pt; color: #999;">
-                <p style="margin: 5px 0;">GST Invoice | Goods once sold cannot be returned or exchanged</p>
+            <div style="text-align: center; margin: 5px 0 3px 0; padding-top: 5px; border-top: 1px dashed black;">
+                <p style="margin: 2px 0; font-size: 9pt; font-weight: bold; color: black;">Thank You!</p>
+                <p style="margin: 1px 0; font-size: 7pt; color: #555;">GST Invoice | No Returns/Exchange</p>
             </div>
         </div>
     `;
@@ -565,11 +824,20 @@ function renderDashboard(root){
   const totalStores = db.stores.length;
   const totalQty = db.stock.reduce((a,s)=>a+s.qty,0);
   const todaySales = db.invoices.filter(inv=>inv.date===today()).reduce((a,inv)=>a+(inv.totals?.total||0),0);
+  const activeAlerts = db.alerts ? db.alerts.filter(a => a.status === 'active').length : 0;
+  
   root.innerHTML = `
     <div class="grid">
       <div class="card">
         <h3>Filters</h3>
         <div class="section stack">
+          ${activeAlerts > 0 ? `
+          <div style="background:var(--danger);color:white;padding:12px;border-radius:8px;margin-bottom:12px;">
+            <strong>⚠️ ${activeAlerts} Low Stock Alert${activeAlerts > 1 ? 's' : ''}</strong>
+            <p style="margin:4px 0 8px 0;font-size:13px;">Critical items need reordering</p>
+            <button class="btn" style="background:white;color:var(--danger)" onclick="open('alerts')">View Alerts</button>
+          </div>
+          ` : ''}
           <div class="chips">
             <span class="chip">Today ${today()}</span>
             <span class="chip">Stores ${totalStores}</span>
@@ -857,6 +1125,10 @@ function renderPurchase(root){
       <div class="card">
         <h3>Receive Stock</h3>
         <div class="section stack">
+          <div id="autoPoNotice" style="display:none;background:var(--chip);padding:12px;border-radius:8px;margin-bottom:16px;">
+            <strong>🤖 Auto-Generated Purchase Order</strong>
+            <p class="muted" style="margin:4px 0 0 0;font-size:13px;">This PO was created from low stock alerts. Review and adjust quantities as needed.</p>
+          </div>
           <div class="row">
             <select class="select" id="puStore">
               <option value="">Select Store</option>
@@ -889,6 +1161,75 @@ function renderPurchase(root){
     </div>
   `;
   const lines=[];
+  
+  // Check for auto-generated PO data from alerts
+  const singlePOData = localStorage.getItem('singlePOData');
+  const bulkPOData = localStorage.getItem('bulkPOData');
+  
+  if (singlePOData) {
+    const data = JSON.parse(singlePOData);
+    $('#autoPoNotice').style.display = 'block';
+    $('#puStore').value = data.storeId;
+    $('#puRef').value = `AUTO-PO-${data.id || Date.now()}`;
+    
+    // Get average cost from recent purchases
+    const recentPurchases = db.purchases.filter(p => 
+      p.items.some(i => i.productId === data.productId)
+    ).slice(-3);
+    
+    let avgCost = 0;
+    if (recentPurchases.length > 0) {
+      const costs = recentPurchases.map(p => {
+        const item = p.items.find(i => i.productId === data.productId);
+        return item?.cost || 0;
+      });
+      avgCost = costs.reduce((a,b) => a+b, 0) / costs.length;
+    }
+    
+    lines.push({
+      productId: data.productId,
+      size: data.size,
+      color: data.color,
+      qty: data.reorderQty || data.suggestedQty || 10,
+      cost: avgCost
+    });
+    
+    localStorage.removeItem('singlePOData');
+  } else if (bulkPOData) {
+    const storeGroups = JSON.parse(bulkPOData);
+    const firstStoreId = Object.keys(storeGroups)[0];
+    
+    $('#autoPoNotice').style.display = 'block';
+    $('#puStore').value = firstStoreId;
+    $('#puRef').value = `BULK-AUTO-PO-${Date.now()}`;
+    
+    // Add all items for first store
+    storeGroups[firstStoreId].forEach(alert => {
+      const recentPurchases = db.purchases.filter(p => 
+        p.items.some(i => i.productId === alert.productId)
+      ).slice(-3);
+      
+      let avgCost = 0;
+      if (recentPurchases.length > 0) {
+        const costs = recentPurchases.map(p => {
+          const item = p.items.find(i => i.productId === alert.productId);
+          return item?.cost || 0;
+        });
+        avgCost = costs.reduce((a,b) => a+b, 0) / costs.length;
+      }
+      
+      lines.push({
+        productId: alert.productId,
+        size: alert.size,
+        color: alert.color,
+        qty: alert.reorderQty || 10,
+        cost: avgCost
+      });
+    });
+    
+    localStorage.removeItem('bulkPOData');
+  }
+  
   function refreshLines(){
     $('#puBody').innerHTML = lines.map((ln,i)=>`
       <tr>
@@ -941,8 +1282,30 @@ function renderPurchase(root){
     if(!lines.length) return alert('No lines');
     const doc={id:uid(),date:$('#puDate').value,storeId,ref:$('#puRef').value.trim(),items:JSON.parse(JSON.stringify(lines)),note:''};
     db.purchases.push(doc);
-    lines.forEach(ln=> adjustStock(storeId,ln.productId,ln.size,ln.color,+ln.qty));
-    await save(); alert('Receipt posted'); renderPurchase(root);
+    lines.forEach(ln=> {
+      adjustStock(storeId,ln.productId,ln.size,ln.color,+ln.qty);
+      
+      // Resolve related alerts when stock is received
+      const alertKey = `${storeId}-${ln.productId}-${ln.size}-${ln.color}`;
+      const alert = db.alerts.find(a => a.key === alertKey && a.status === 'active');
+      if (alert) {
+        alert.status = 'resolved';
+        alert.action = 'Stock Received';
+        alert.resolvedAt = new Date().toISOString();
+        alert.resolvedBy = currentUser ? currentUser.id : null;
+        
+        // Update related suggestion
+        const suggestion = db.reorderSuggestions.find(s => s.alertId === alert.id && s.status === 'pending');
+        if (suggestion) {
+          suggestion.status = 'completed';
+          suggestion.completedAt = new Date().toISOString();
+        }
+      }
+    });
+    await save();
+    renderTabs(); // Update notification badge
+    alert('Receipt posted and alerts resolved!');
+    renderPurchase(root);
   };
   refreshPick(); refreshLines();
 }
@@ -1066,14 +1429,37 @@ function renderPOS(root){
         </div>
       </div>
       <div class="card">
-        <h3>Totals</h3>
+        <h3>Totals & Payment</h3>
         <div class="section stack" id="posTotals"></div>
         <div class="section">
-          <div class="row">
-            <select class="select" id="payMode">
-              <option>Cash</option><option>UPI</option><option>Card</option>
+          <h4 style="margin:0 0 12px 0;font-size:14px;color:var(--muted)">Payment Methods</h4>
+          <div id="paymentMethods" style="margin-bottom:12px;">
+            <!-- Payment lines will be added here -->
+          </div>
+          <div class="row" style="margin-bottom:12px;">
+            <select class="select" id="payMode" style="flex:1">
+              <option value="Cash">Cash</option>
+              <option value="Card">Card</option>
+              <option value="UPI">UPI</option>
+              <option value="Wallet">Wallet</option>
+              <option value="Credit">Credit</option>
             </select>
-            <input class="input" id="payAmt" placeholder="Amount">
+            <input class="input" id="payAmt" placeholder="Amount" style="flex:1">
+            <button class="btn" id="addPayment">+ Add</button>
+          </div>
+          <div id="paymentSummary" style="padding:12px;background:var(--panel-2);border-radius:8px;margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span>Total Amount:</span>
+              <span id="totalAmount" class="mono" style="font-weight:bold;">₹0.00</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span>Paid Amount:</span>
+              <span id="paidAmount" class="mono" style="color:var(--good);font-weight:bold;">₹0.00</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:4px;">
+              <span style="font-weight:bold;">Balance:</span>
+              <span id="balanceAmount" class="mono" style="font-weight:bold;font-size:16px;">₹0.00</span>
+            </div>
           </div>
           <div class="row">
             <textarea class="input" id="posNotes" rows="2" placeholder="Notes"></textarea>
@@ -1085,6 +1471,58 @@ function renderPOS(root){
   const storeId = db.stores[0]?.id || '';
   if($('#posStore')) $('#posStore').value = storeId;
   const cart=[];
+  const payments = []; // Track multiple payment methods
+  
+  function updatePaymentSummary() {
+    const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+    let grandTotal = 0;
+    
+    // Calculate cart total
+    if (cart.length > 0) {
+      let sub = 0, tax = 0;
+      cart.forEach(it => {
+        const base = (it.price || 0) * (it.qty || 0);
+        const disc = base * (it.discount || 0) / 100;
+        const taxable = Math.max(0, base - disc);
+        sub += taxable;
+        tax += taxable * (it.taxPct || 0) / 100;
+      });
+      const total = sub + tax;
+      const r = Math.round(total) - total;
+      grandTotal = total + r;
+    }
+    
+    const balance = grandTotal - totalPaid;
+    
+    $('#totalAmount').textContent = '₹' + money(grandTotal);
+    $('#paidAmount').textContent = '₹' + money(totalPaid);
+    $('#balanceAmount').textContent = '₹' + money(balance);
+    $('#balanceAmount').style.color = balance > 0.01 ? 'var(--danger)' : balance < -0.01 ? 'var(--warn)' : 'var(--good)';
+    
+    // Update payment methods display
+    const paymentMethodsEl = $('#paymentMethods');
+    if (payments.length === 0) {
+      paymentMethodsEl.innerHTML = '<div class="muted" style="font-size:13px;padding:8px;">No payments added yet</div>';
+    } else {
+      paymentMethodsEl.innerHTML = payments.map((p, idx) => `
+        <div style="display:flex;gap:8px;align-items:center;padding:8px;background:var(--panel-2);border-radius:6px;margin-bottom:6px;">
+          <span class="badge" style="background:var(--gradient-primary);min-width:60px;">${p.mode}</span>
+          <span class="mono" style="flex:1;font-weight:bold;">₹${money(p.amount)}</span>
+          ${p.reference ? `<span class="muted" style="font-size:12px;">${p.reference}</span>` : ''}
+          <button class="btn red" style="padding:4px 8px;font-size:12px;" data-idx="${idx}">Remove</button>
+        </div>
+      `).join('');
+      
+      // Add remove handlers
+      paymentMethodsEl.querySelectorAll('button[data-idx]').forEach(btn => {
+        btn.onclick = () => {
+          payments.splice(+btn.dataset.idx, 1);
+          updatePaymentSummary();
+        };
+      });
+    }
+  }
+  
   function addByQuery(q){
     q = (q||'').trim();
     if(!q) return;
@@ -1121,6 +1559,32 @@ function renderPOS(root){
     $('#posScan').value='';
     refreshCart();
   }
+  
+  $('#addPayment').onclick = () => {
+    const mode = $('#payMode').value;
+    const amount = parseFloat($('#payAmt').value);
+    
+    if (!amount || amount <= 0) {
+      return alert('Please enter a valid payment amount');
+    }
+    
+    payments.push({
+      mode: mode,
+      amount: amount,
+      reference: '',
+      timestamp: new Date().toISOString()
+    });
+    
+    $('#payAmt').value = '';
+    updatePaymentSummary();
+  };
+  
+  $('#payAmt').onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      $('#addPayment').click();
+    }
+  };
+
   function refreshCart(){
     const stId=$('#posStore').value;
     $('#posBody').innerHTML = cart.map((it,i)=>{
@@ -1178,7 +1642,7 @@ function renderPOS(root){
     $('#payAmt').value = money(grand);
   }
   $('#posScan').addEventListener('keydown',e=>{ if(e.key==='Enter'){ addByQuery(e.target.value); } });
-  $('#posClear').onclick=()=>{ if(confirm('Clear cart?')){ cart.length=0; refreshCart(); } };
+  $('#posClear').onclick=()=>{ if(confirm('Clear cart?')){ cart.length=0; payments.length=0; refreshCart(); updatePaymentSummary(); } };
   $('#posPay').onclick=async ()=>{
     const stId=$('#posStore').value;
     if(!stId) return alert('Select store');
@@ -1197,6 +1661,18 @@ function renderPOS(root){
       sub+=taxable; tax+=taxable*(it.taxPct||0)/100;
     });
     const total=sub+tax; const r=Math.round(total)-total; const grand=total+r;
+    
+    // Validate payments
+    const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+    if (Math.abs(totalPaid - grand) > 0.01) {
+      const confirmed = confirm(`Payment mismatch! Total: ₹${money(grand)}, Paid: ₹${money(totalPaid)}. Continue anyway?`);
+      if (!confirmed) return;
+    }
+    
+    // Default to single payment if no split payments added
+    const finalPayments = payments.length > 0 ? JSON.parse(JSON.stringify(payments)) : 
+      [{mode: $('#payMode').value || 'Cash', amount: grand, reference: '', timestamp: new Date().toISOString()}];
+    
     const invNo = $('#posNumber').value.trim() || `INV-${String(db.seq.inv++).padStart(5,'0')}`;
     const inv = {
       id:uid(),
@@ -1205,9 +1681,10 @@ function renderPOS(root){
       storeId:stId,
       number:invNo,
       customerId:$('#posCustomer').value||'',
+      cashierId: currentUser ? currentUser.id : null,
       items: JSON.parse(JSON.stringify(cart)),
       totals:{sub,tax,total:grand,round:r},
-      payments:{mode:$('#payMode').value,amount:+($('#payAmt').value||grand)},
+      payments: finalPayments, // Now an array of payment methods
       notes:$('#posNotes').value.trim()
     };
     db.invoices.push(inv);
@@ -1215,132 +1692,576 @@ function renderPOS(root){
     cart.forEach(it=> adjustStock(stId,it.productId,it.size,it.color,-it.qty));
     await save();
     printInvoice(inv);
+    payments.length = 0; // Clear payments
     renderPOS(root);
   };
 
   refreshCart();
+  updatePaymentSummary();
 }
 
-/* ====== Returns ====== */
+/* ====== Returns & Exchange ====== */
 function renderReturns(root) {
   root.innerHTML = `
-    <div class="card">
-      <h3>Exchange & Refund</h3>
-      <div class="section">
-        <div class="row">
-          <input class="input" id="returnInvSearch" placeholder="Enter Invoice Number">
-          <button class="btn" id="returnFindInv">Find Invoice</button>
+    <div class="stack">
+      <div class="card">
+        <h3>🔄 Exchange & Refund Management</h3>
+        <div class="section">
+          <div class="row">
+            <input class="input" id="returnInvSearch" placeholder="Enter Invoice Number" style="flex:2">
+            <button class="btn" id="returnFindInv">🔍 Find Invoice</button>
+          </div>
+        </div>
+        <div id="returnInvDetails" class="section"></div>
+      </div>
+      
+      <div class="card" id="exchangeHistoryCard">
+        <h3>📋 Recent Exchanges & Returns</h3>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Original Invoice</th>
+                  <th>Customer</th>
+                  <th class="right">Return Value</th>
+                  <th class="right">Exchange Value</th>
+                  <th class="right">Difference</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${db.invoices.filter(inv => inv.number?.startsWith('REF-') || inv.number?.startsWith('EXC-'))
+                  .sort((a, b) => b.date.localeCompare(a.date))
+                  .slice(0, 20)
+                  .map(inv => {
+                    const isExchange = inv.number?.startsWith('EXC-');
+                    const customer = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
+                    const originalInv = db.invoices.find(i => i.id === inv.relatedInvoiceId);
+                    const returnValue = Math.abs(inv.returnValue || inv.totals?.total || 0);
+                    const exchangeValue = inv.exchangeValue || 0;
+                    const difference = exchangeValue - returnValue;
+                    
+                    return `
+                      <tr>
+                        <td>${inv.date} ${inv.time || ''}</td>
+                        <td>
+                          <span class="badge" style="background:${isExchange ? 'var(--accent)' : 'var(--danger)'}">
+                            ${isExchange ? 'Exchange' : 'Refund'}
+                          </span>
+                        </td>
+                        <td>${originalInv?.number || 'N/A'}</td>
+                        <td>${customer?.name || 'Walk-in'}</td>
+                        <td class="right mono">₹${money(returnValue)}</td>
+                        <td class="right mono">${isExchange ? '₹' + money(exchangeValue) : '-'}</td>
+                        <td class="right mono" style="color:${difference > 0 ? 'var(--good)' : difference < 0 ? 'var(--danger)' : 'var(--muted)'}">
+                          ${isExchange ? (difference >= 0 ? '+' : '') + '₹' + money(difference) : '-'}
+                        </td>
+                        <td class="right">
+                          <button class="btn secondary" data-id="${inv.id}">View</button>
+                        </td>
+                      </tr>
+                    `;
+                  }).join('') || '<tr><td colspan="8" class="muted" style="text-align:center;">No exchanges or returns yet.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      <div id="returnInvDetails" class="section"></div>
     </div>
   `;
 
   $('#returnFindInv').onclick = () => {
     const invNumber = $('#returnInvSearch').value.trim();
-    if (!invNumber) return;
+    if (!invNumber) return alert('Please enter an invoice number');
 
     const invoice = db.invoices.find(inv => inv.number === invNumber);
     const detailsContainer = $('#returnInvDetails');
 
-    if (invoice) {
+    if (invoice && !invoice.number?.startsWith('REF-') && !invoice.number?.startsWith('EXC-')) {
       const store = getStore(invoice.storeId);
+      const customer = invoice.customerId ? db.customers.find(c => c.id === invoice.customerId) : null;
+      
       detailsContainer.innerHTML = `
-        <h4>Invoice Details</h4>
-        <div class="chips">
-          <span class="chip">Invoice: ${invoice.number}</span>
-          <span class="chip">Date: ${invoice.date} ${invoice.time}</span>
-          <span class="chip">Store: ${store ? store.name : 'N/A'}</span>
-          <span class="chip">Total: ₹${money(invoice.totals?.total)}</span>
+        <div style="background:var(--panel-2);padding:16px;border-radius:8px;margin-bottom:16px;">
+          <h4 style="margin:0 0 12px 0;">Invoice Details</h4>
+          <div class="chips">
+            <span class="chip">Invoice: ${invoice.number}</span>
+            <span class="chip">Date: ${invoice.date} ${invoice.time}</span>
+            <span class="chip">Store: ${store ? store.name : 'N/A'}</span>
+            <span class="chip">Customer: ${customer?.name || 'Walk-in'}</span>
+            <span class="chip">Total: ₹${money(invoice.totals?.total)}</span>
+          </div>
         </div>
-        <div class="table-container" style="margin-top: 16px;">
-          <table>
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Variant</th>
-                <th class="right">Price</th>
-                <th class="right">Qty</th>
-                <th class="right">Return Qty</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              ${(invoice.items || []).map((item, index) => `
+        
+        <div class="row" style="margin-bottom:16px;gap:12px;">
+          <button class="btn" id="switchToRefund" style="flex:1;background:var(--gradient-danger);">💰 Refund Mode</button>
+          <button class="btn" id="switchToExchange" style="flex:1;background:var(--gradient-primary);">🔄 Exchange Mode</button>
+        </div>
+        
+        <div id="returnMode">
+          <h4>Select Items to Return</h4>
+          <div class="table-container" style="margin-top: 16px;">
+            <table>
+              <thead>
                 <tr>
-                  <td>${getProduct(item.productId)?.name || 'N/A'}</td>
-                  <td>${item.size}/${item.color}</td>
-                  <td class="right">₹${money(item.price)}</td>
-                  <td class="right">${item.qty}</td>
-                  <td class="right"><input class="input" type="number" min="0" max="${item.qty}" value="0" style="width: 80px;" data-index="${index}"></td>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th class="right">Price</th>
+                  <th class="right">Qty</th>
+                  <th class="right">Return Qty</th>
+                  <th class="right">Return Value</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
+              </thead>
+              <tbody id="returnItemsBody">
+                ${(invoice.items || []).map((item, index) => {
+                  const product = getProduct(item.productId);
+                  return `
+                    <tr>
+                      <td><strong>${product?.name || 'N/A'}</strong></td>
+                      <td>${item.size}/${item.color}</td>
+                      <td class="right mono">₹${money(item.price)}</td>
+                      <td class="right">${item.qty}</td>
+                      <td class="right">
+                        <input class="input return-qty-input" type="number" min="0" max="${item.qty}" value="0" 
+                               style="width: 80px;" data-index="${index}" data-price="${item.price}">
+                      </td>
+                      <td class="right mono return-value" data-index="${index}">₹0.00</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div style="background:var(--panel-2);padding:16px;border-radius:8px;margin-top:16px;">
+            <div style="display:flex;justify-content:space-between;font-size:18px;font-weight:bold;">
+              <span>Total Return Value:</span>
+              <span id="totalReturnValue" class="mono" style="color:var(--danger);">₹0.00</span>
+            </div>
+          </div>
+          
+          <div class="row" style="margin-top: 16px;">
+            <button class="btn red" id="processRefund">💰 Process Refund</button>
+          </div>
         </div>
-        <div class="row" style="margin-top: 16px;">
-          <button class="btn red" id="processRefund">Process Refund</button>
-        </div>
-        <div class="muted" style="margin-top: 16px;">
-          For exchanges, please first process a refund for the returned items and then create a new bill from the POS for the new items.
+        
+        <div id="exchangeMode" style="display:none;">
+          <div class="grid">
+            <div>
+              <h4>Items to Return</h4>
+              <div class="table-container" style="margin-top: 12px;">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Variant</th>
+                      <th class="right">Price</th>
+                      <th class="right">Return Qty</th>
+                    </tr>
+                  </thead>
+                  <tbody id="exchangeReturnBody">
+                    ${(invoice.items || []).map((item, index) => {
+                      const product = getProduct(item.productId);
+                      return `
+                        <tr>
+                          <td>${product?.name || 'N/A'}</td>
+                          <td>${item.size}/${item.color}</td>
+                          <td class="right mono">₹${money(item.price)}</td>
+                          <td class="right">
+                            <input class="input exchange-return-qty" type="number" min="0" max="${item.qty}" 
+                                   value="0" style="width: 70px;" data-index="${index}" 
+                                   data-product-id="${item.productId}" data-price="${item.price}"
+                                   data-size="${item.size}" data-color="${item.color}">
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div style="background:var(--panel-2);padding:12px;border-radius:8px;margin-top:12px;">
+                <div style="display:flex;justify-content:space-between;">
+                  <span><strong>Return Value:</strong></span>
+                  <span id="exchangeReturnValue" class="mono" style="color:var(--danger);font-weight:bold;">₹0.00</span>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4>New Items (Exchange)</h4>
+              <div style="margin-bottom:12px;">
+                <input class="input" id="exchangeSearch" placeholder="Search product to add">
+              </div>
+              <div id="exchangeNewItems" style="max-height:300px;overflow-y:auto;">
+                <!-- Exchange items will be added here -->
+              </div>
+              <div style="background:var(--panel-2);padding:12px;border-radius:8px;margin-top:12px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                  <span><strong>Exchange Value:</strong></span>
+                  <span id="exchangeNewValue" class="mono" style="color:var(--good);font-weight:bold;">₹0.00</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;">
+                  <span><strong>Difference:</strong></span>
+                  <span id="exchangeDifference" class="mono" style="font-weight:bold;font-size:16px;">₹0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row" style="margin-top: 16px;">
+            <button class="btn green" id="processExchange">🔄 Complete Exchange</button>
+          </div>
         </div>
       `;
 
+      const exchangeCart = [];
+      
+      // Update return values on input change
+      $$('.return-qty-input').forEach(input => {
+        input.oninput = () => {
+          const index = input.dataset.index;
+          const qty = parseFloat(input.value) || 0;
+          const price = parseFloat(input.dataset.price) || 0;
+          const value = qty * price;
+          
+          $(`.return-value[data-index="${index}"]`).textContent = '₹' + money(value);
+          
+          // Update total
+          let total = 0;
+          $$('.return-qty-input').forEach(inp => {
+            const q = parseFloat(inp.value) || 0;
+            const p = parseFloat(inp.dataset.price) || 0;
+            total += q * p;
+          });
+          $('#totalReturnValue').textContent = '₹' + money(total);
+        };
+      });
+      
+      // Exchange mode calculations
+      function updateExchangeValues() {
+        let returnVal = 0;
+        $$('.exchange-return-qty').forEach(inp => {
+          const q = parseFloat(inp.value) || 0;
+          const p = parseFloat(inp.dataset.price) || 0;
+          returnVal += q * p;
+        });
+        
+        let exchangeVal = 0;
+        exchangeCart.forEach(item => {
+          exchangeVal += item.price * item.qty;
+        });
+        
+        const diff = exchangeVal - returnVal;
+        
+        $('#exchangeReturnValue').textContent = '₹' + money(returnVal);
+        $('#exchangeNewValue').textContent = '₹' + money(exchangeVal);
+        $('#exchangeDifference').textContent = (diff >= 0 ? '+' : '') + '₹' + money(diff);
+        $('#exchangeDifference').style.color = diff > 0 ? 'var(--good)' : diff < 0 ? 'var(--danger)' : 'var(--muted)';
+      }
+      
+      $$('.exchange-return-qty').forEach(input => {
+        input.oninput = updateExchangeValues;
+      });
+      
+      // Search products for exchange
+      $('#exchangeSearch').oninput = () => {
+        const query = $('#exchangeSearch').value.toLowerCase();
+        if (query.length < 2) {
+          $('#exchangeNewItems').innerHTML = '<div class="muted" style="padding:12px;">Type to search products...</div>';
+          return;
+        }
+        
+        const matches = db.products.filter(p => 
+          p.name.toLowerCase().includes(query) || 
+          (p.sku && p.sku.toLowerCase().includes(query))
+        ).slice(0, 10);
+        
+        if (matches.length === 0) {
+          $('#exchangeNewItems').innerHTML = '<div class="muted" style="padding:12px;">No products found.</div>';
+          return;
+        }
+        
+        $('#exchangeNewItems').innerHTML = matches.map(p => {
+          const variants = p.variants && p.variants.length ? p.variants : [{size:'STD', color:'STD'}];
+          return `
+            <div class="card" style="margin-bottom:8px;padding:12px;">
+              <div style="margin-bottom:8px;">
+                <strong>${p.name}</strong>
+                <span class="muted" style="font-size:12px;margin-left:8px;">${p.sku || ''}</span>
+                <div class="mono" style="color:var(--good);font-weight:bold;">₹${money(p.price)}</div>
+              </div>
+              <div class="chips">
+                ${variants.map(v => `
+                  <button class="chip" style="cursor:pointer;" 
+                          data-pid="${p.id}" data-name="${p.name}" data-price="${p.price}"
+                          data-size="${v.size}" data-color="${v.color}">
+                    ${v.size}/${v.color}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+        
+        // Add click handlers to variant chips
+        $('#exchangeNewItems').querySelectorAll('.chip').forEach(chip => {
+          chip.onclick = () => {
+            const item = {
+              productId: chip.dataset.pid,
+              name: chip.dataset.name,
+              price: parseFloat(chip.dataset.price),
+              size: chip.dataset.size,
+              color: chip.dataset.color,
+              qty: 1
+            };
+            
+            // Check if already in cart
+            const existing = exchangeCart.find(i => 
+              i.productId === item.productId && 
+              i.size === item.size && 
+              i.color === item.color
+            );
+            
+            if (existing) {
+              existing.qty++;
+            } else {
+              exchangeCart.push(item);
+            }
+            
+            renderExchangeCart();
+            updateExchangeValues();
+          };
+        });
+      };
+      
+      function renderExchangeCart() {
+        if (exchangeCart.length === 0) {
+          $('#exchangeNewItems').innerHTML = '<div class="muted" style="padding:12px;">Search and add products to exchange</div>';
+          return;
+        }
+        
+        $('#exchangeNewItems').innerHTML = `
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th class="right">Price</th>
+                  <th class="right">Qty</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${exchangeCart.map((item, idx) => `
+                  <tr>
+                    <td>${item.name}</td>
+                    <td>${item.size}/${item.color}</td>
+                    <td class="right mono">₹${money(item.price)}</td>
+                    <td class="right">
+                      <input class="input" type="number" min="1" value="${item.qty}" 
+                             style="width:60px;" data-idx="${idx}">
+                    </td>
+                    <td class="right">
+                      <button class="btn red" style="padding:4px 8px;font-size:12px;" data-idx="${idx}">×</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        
+        // Qty change handlers
+        $('#exchangeNewItems').querySelectorAll('input[type="number"]').forEach(inp => {
+          inp.oninput = () => {
+            const idx = parseInt(inp.dataset.idx);
+            exchangeCart[idx].qty = parseInt(inp.value) || 1;
+            updateExchangeValues();
+          };
+        });
+        
+        // Remove handlers
+        $('#exchangeNewItems').querySelectorAll('button[data-idx]').forEach(btn => {
+          btn.onclick = () => {
+            exchangeCart.splice(parseInt(btn.dataset.idx), 1);
+            renderExchangeCart();
+            updateExchangeValues();
+          };
+        });
+      }
+      
+      // Switch modes
+      $('#switchToRefund').onclick = () => {
+        $('#returnMode').style.display = 'block';
+        $('#exchangeMode').style.display = 'none';
+        $('#switchToRefund').style.opacity = '1';
+        $('#switchToExchange').style.opacity = '0.6';
+      };
+      
+      $('#switchToExchange').onclick = () => {
+        $('#returnMode').style.display = 'none';
+        $('#exchangeMode').style.display = 'block';
+        $('#switchToRefund').style.opacity = '0.6';
+        $('#switchToExchange').style.opacity = '1';
+        renderExchangeCart();
+      };
+
+      // Process refund
       $('#processRefund').onclick = async () => {
         const returnItems = [];
         let refundAmount = 0;
 
-        // First, validate all inputs
+        // Validate
         for (const [index, item] of (invoice.items || []).entries()) {
-          const returnQty = +$(`input[data-index="${index}"]`).value;
+          const returnQty = +$(`.return-qty-input[data-index="${index}"]`).value;
           if (returnQty > item.qty) {
-            alert(`Return quantity for ${getProduct(item.productId)?.name || 'item'} (${returnQty}) cannot exceed original quantity of ${item.qty}.`);
+            alert(`Return quantity for ${getProduct(item.productId)?.name || 'item'} cannot exceed original quantity.`);
             return;
-          }
-          if (returnQty < 0) {
-             alert(`Return quantity cannot be negative.`);
-             return;
           }
         }
         
-        let hasItemsToReturn = false;
-        // If validation passes, process the return
+        // Process
         (invoice.items || []).forEach((item, index) => {
-          const returnQty = +$(`input[data-index="${index}"]`).value;
+          const returnQty = +$(`.return-qty-input[data-index="${index}"]`).value;
           if (returnQty > 0) {
-            hasItemsToReturn = true;
-            returnItems.push({ ...item, returnQty });
-            refundAmount += item.price * returnQty; 
+            returnItems.push({ ...item, qty: returnQty });
+            refundAmount += item.price * returnQty;
             adjustStock(invoice.storeId, item.productId, item.size, item.color, returnQty);
           }
         });
 
-        if (hasItemsToReturn) {
-          // Create a refund record
-          const refundInvoice = {
-            id: uid(),
-            date: today(),
-            time: new Date().toLocaleTimeString(),
-            storeId: invoice.storeId,
-            number: `REF-${invoice.number}`,
-            relatedInvoiceId: invoice.id,
-            items: returnItems,
-            totals: { sub: -refundAmount, tax: 0, total: -refundAmount, round: 0 },
-            payments: { mode: 'Refund', amount: -refundAmount },
-            notes: `Refund for invoice ${invoice.number}`
-          };
-          db.invoices.push(refundInvoice);
-          await save();
-          alert(`Refund of ₹${money(refundAmount)} processed successfully.`);
-          open('returns');
-        } else {
-          alert('No items selected for return.');
+        if (returnItems.length === 0) {
+          return alert('Please select items to return.');
         }
+
+        const refundInvoice = {
+          id: uid(),
+          date: today(),
+          time: new Date().toLocaleTimeString(),
+          storeId: invoice.storeId,
+          number: `REF-${invoice.number}`,
+          relatedInvoiceId: invoice.id,
+          customerId: invoice.customerId,
+          items: returnItems,
+          returnValue: refundAmount,
+          totals: { sub: -refundAmount, tax: 0, total: -refundAmount, round: 0 },
+          payments: [{ mode: 'Refund', amount: -refundAmount, reference: '', timestamp: new Date().toISOString() }],
+          notes: `Refund for invoice ${invoice.number}`
+        };
+        
+        db.invoices.push(refundInvoice);
+        await save();
+        alert(`Refund of ₹${money(refundAmount)} processed successfully!`);
+        renderReturns(root);
       };
+
+      // Process exchange
+      $('#processExchange').onclick = async () => {
+        const returnItems = [];
+        let returnValue = 0;
+
+        // Validate returns
+        (invoice.items || []).forEach((item, index) => {
+          const returnQty = +$(`.exchange-return-qty[data-index="${index}"]`).value;
+          if (returnQty > 0) {
+            returnItems.push({ ...item, qty: returnQty });
+            returnValue += item.price * returnQty;
+            adjustStock(invoice.storeId, item.productId, item.size, item.color, returnQty);
+          }
+        });
+
+        if (returnItems.length === 0) {
+          return alert('Please select items to return.');
+        }
+        
+        if (exchangeCart.length === 0) {
+          return alert('Please add items for exchange.');
+        }
+        
+        // Check stock availability
+        for (const item of exchangeCart) {
+          const available = stockQty(invoice.storeId, item.productId, item.size, item.color);
+          if (item.qty > available) {
+            return alert(`Insufficient stock for ${item.name} (${item.size}/${item.color}). Available: ${available}`);
+          }
+        }
+        
+        let exchangeValue = 0;
+        exchangeCart.forEach(item => {
+          exchangeValue += item.price * item.qty;
+          adjustStock(invoice.storeId, item.productId, item.size, item.color, -item.qty);
+        });
+        
+        const difference = exchangeValue - returnValue;
+        
+        // Create exchange invoice
+        const exchangeInvoice = {
+          id: uid(),
+          date: today(),
+          time: new Date().toLocaleTimeString(),
+          storeId: invoice.storeId,
+          number: `EXC-${invoice.number}-${uid().slice(0,4)}`,
+          relatedInvoiceId: invoice.id,
+          customerId: invoice.customerId,
+          cashierId: currentUser ? currentUser.id : null,
+          items: exchangeCart.map(item => ({
+            productId: item.productId,
+            size: item.size,
+            color: item.color,
+            qty: item.qty,
+            price: item.price,
+            taxPct: 0,
+            discount: 0
+          })),
+          returnedItems: returnItems,
+          returnValue: returnValue,
+          exchangeValue: exchangeValue,
+          totals: { sub: difference, tax: 0, total: difference, round: 0 },
+          payments: difference > 0 ? [{ mode: 'Cash', amount: difference, reference: '', timestamp: new Date().toISOString() }] : 
+                    difference < 0 ? [{ mode: 'Refund', amount: difference, reference: '', timestamp: new Date().toISOString() }] :
+                    [{ mode: 'Exchange', amount: 0, reference: '', timestamp: new Date().toISOString() }],
+          notes: `Exchange from invoice ${invoice.number}. Return value: ₹${money(returnValue)}, Exchange value: ₹${money(exchangeValue)}`
+        };
+        
+        db.invoices.push(exchangeInvoice);
+        await save();
+        
+        let message = `Exchange completed successfully!\n\n`;
+        message += `Return Value: ₹${money(returnValue)}\n`;
+        message += `Exchange Value: ₹${money(exchangeValue)}\n`;
+        if (difference > 0) {
+          message += `\nCustomer pays: ₹${money(difference)}`;
+        } else if (difference < 0) {
+          message += `\nRefund to customer: ₹${money(Math.abs(difference))}`;
+        } else {
+          message += `\nEven exchange (no payment required)`;
+        }
+        
+        alert(message);
+        renderReturns(root);
+      };
+      
+    } else if (invoice) {
+      detailsContainer.innerHTML = '<div class="muted">This is a refund/exchange invoice. Please enter an original sales invoice number.</div>';
     } else {
       detailsContainer.innerHTML = '<div class="muted">Invoice not found.</div>';
     }
   };
+  
+  // View transaction details
+  $$('button[data-id]').forEach(btn => {
+    btn.onclick = () => {
+      const invId = btn.dataset.id;
+      const inv = db.invoices.find(i => i.id === invId);
+      if (inv) {
+        printInvoice(inv);
+      }
+    };
+  });
 }
 
 
@@ -1386,37 +2307,483 @@ function renderCustomers(root){
 
 /* ====== Reports ====== */
 function renderReports(root){
-  // Simple daily sales and stock valuation
+  // Calculate analytics data
+  const salesInvoices = db.invoices.filter(inv => !inv.number?.startsWith('REF-'));
+  
+  // Daily sales
   const daily = {};
-  db.invoices.forEach(inv=>{
-    if (inv.number?.startsWith('REF-')) return; // Exclude refunds from sales
+  salesInvoices.forEach(inv=>{
     daily[inv.date] = (daily[inv.date]||0) + (inv.totals?.total||0);
   });
+  
+  // Hourly sales (last 24 hours)
+  const hourly = Array(24).fill(0);
+  const todayDate = new Date().toISOString().slice(0,10);
+  salesInvoices.filter(inv => inv.date === todayDate).forEach(inv => {
+    if (inv.time) {
+      const hour = parseInt(inv.time.split(':')[0]);
+      if (!isNaN(hour)) hourly[hour] += inv.totals?.total || 0;
+    }
+  });
+  
+  // Top selling products
+  const productSales = {};
+  salesInvoices.forEach(inv => {
+    (inv.items || []).forEach(item => {
+      const key = item.productId;
+      if (!productSales[key]) {
+        productSales[key] = {qty: 0, revenue: 0, profit: 0};
+      }
+      productSales[key].qty += item.qty || 0;
+      const itemTotal = (item.price * item.qty) * (1 - (item.discount || 0) / 100);
+      productSales[key].revenue += itemTotal;
+      
+      // Calculate profit (need cost from purchases)
+      const product = getProduct(item.productId);
+      if (product) {
+        const purchases = db.purchases.filter(p => 
+          p.items.some(pi => pi.productId === item.productId)
+        );
+        let avgCost = 0;
+        if (purchases.length > 0) {
+          const totalCost = purchases.reduce((sum, p) => {
+            const purchaseItem = p.items.find(pi => pi.productId === item.productId);
+            return sum + (purchaseItem?.cost || 0);
+          }, 0);
+          avgCost = totalCost / purchases.length;
+        }
+        productSales[key].profit += itemTotal - (avgCost * item.qty);
+      }
+    });
+  });
+  
+  const topProducts = Object.entries(productSales)
+    .map(([id, data]) => ({product: getProduct(id), ...data}))
+    .filter(x => x.product)
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 10);
+  
+  // Category sales
+  const categorySales = {};
+  salesInvoices.forEach(inv => {
+    (inv.items || []).forEach(item => {
+      const product = getProduct(item.productId);
+      const category = product?.category || 'Uncategorized';
+      if (!categorySales[category]) categorySales[category] = 0;
+      const itemTotal = (item.price * item.qty) * (1 - (item.discount || 0) / 100);
+      categorySales[category] += itemTotal;
+    });
+  });
+  
+  // Store comparison
+  const storeSales = {};
+  db.stores.forEach(s => storeSales[s.id] = {name: s.name, revenue: 0, orders: 0});
+  salesInvoices.forEach(inv => {
+    if (storeSales[inv.storeId]) {
+      storeSales[inv.storeId].revenue += inv.totals?.total || 0;
+      storeSales[inv.storeId].orders++;
+    }
+  });
+  
+  // Cashier performance
+  const cashierPerf = {};
+  salesInvoices.forEach(inv => {
+    const cashier = inv.cashierId || inv.userId || 'Unknown';
+    if (!cashierPerf[cashier]) {
+      const user = db.users.find(u => u.id === cashier);
+      cashierPerf[cashier] = {
+        name: user?.name || 'System',
+        orders: 0,
+        revenue: 0,
+        avgOrder: 0
+      };
+    }
+    cashierPerf[cashier].orders++;
+    cashierPerf[cashier].revenue += inv.totals?.total || 0;
+  });
+  Object.values(cashierPerf).forEach(c => {
+    c.avgOrder = c.orders > 0 ? c.revenue / c.orders : 0;
+  });
+  
+  // Stock valuation
   const valuation = db.stock.reduce((a,s)=>{
     const p=getProduct(s.productId)||{};
     return a + (p.price||0)*(s.qty||0);
   },0);
+  
+  // Total metrics
+  const totalRevenue = salesInvoices.reduce((sum, inv) => sum + (inv.totals?.total || 0), 0);
+  const totalOrders = salesInvoices.length;
+  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
   root.innerHTML = `
     <div class="stack">
+      <!-- Key Metrics -->
+      <div class="totals" style="grid-template-columns: repeat(4, 1fr);">
+        <div class="kpi">
+          <h4>Total Revenue</h4>
+          <div class="val mono">₹${money(totalRevenue)}</div>
+        </div>
+        <div class="kpi">
+          <h4>Total Orders</h4>
+          <div class="val">${totalOrders}</div>
+        </div>
+        <div class="kpi">
+          <h4>Avg Order Value</h4>
+          <div class="val mono">₹${money(avgOrderValue)}</div>
+        </div>
+        <div class="kpi">
+          <h4>Stock Value</h4>
+          <div class="val mono">₹${money(valuation)}</div>
+        </div>
+      </div>
+
+      <!-- Sales Trends -->
       <div class="grid">
-        <div class="card"><h3>Daily Sales</h3>
+        <div class="card">
+          <h3>📈 Daily Sales Trend (Last 30 Days)</h3>
           <div class="section">
             <div class="table-container">
-            ${Object.keys(daily).length? '<table><thead><tr><th>Date</th><th class="right">Amount</th></tr></thead><tbody>'+
+            ${Object.keys(daily).length? '<table><thead><tr><th>Date</th><th class="right">Revenue</th></tr></thead><tbody>'+
               Object.entries(daily).sort((a,b)=>b[0].localeCompare(a[0])).slice(0, 30).map(([d,v])=>`<tr><td>${d}</td><td class="right mono">₹ ${money(v)}</td></tr>`).join('')+
             '</tbody></table>' : '<div class="muted">No sales yet.</div>'}
             </div>
           </div>
         </div>
-        <div class="card"><h3>Stock Valuation</h3>
+        
+        <div class="card">
+          <h3>⏰ Hourly Sales (Today)</h3>
           <div class="section">
-            <div class="kpi"><h4>Current Value</h4><div class="val mono">₹ ${money(valuation)}</div></div>
+            <div style="padding:16px;">
+              ${hourly.map((amt, hr) => {
+                const maxHourly = Math.max(...hourly, 1);
+                const widthPct = (amt / maxHourly) * 100;
+                return `
+                  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                    <span style="min-width:60px;font-size:13px;">${hr}:00</span>
+                    <div style="flex:1;background:var(--panel-2);border-radius:4px;height:24px;position:relative;overflow:hidden;">
+                      <div style="width:${widthPct}%;height:100%;background:var(--gradient-primary);transition:width 0.3s;"></div>
+                    </div>
+                    <span style="min-width:80px;text-align:right;font-size:13px;font-family:monospace;">₹${money(amt)}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
           </div>
         </div>
       </div>
+
+      <!-- Top Products & Category Analysis -->
+      <div class="grid">
+        <div class="card">
+          <h3>🏆 Top Selling Products</h3>
+          <div class="section">
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th class="right">Qty Sold</th>
+                    <th class="right">Revenue</th>
+                    <th class="right">Profit</th>
+                    <th class="right">Margin %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${topProducts.map(item => {
+                    const marginPct = item.revenue > 0 ? (item.profit / item.revenue) * 100 : 0;
+                    return `
+                      <tr>
+                        <td><strong>${item.product.name}</strong><br><span class="muted" style="font-size:12px;">${item.product.category || 'N/A'}</span></td>
+                        <td class="right">${item.qty}</td>
+                        <td class="right mono">₹${money(item.revenue)}</td>
+                        <td class="right mono" style="color:${item.profit >= 0 ? 'var(--good)' : 'var(--danger)'}">₹${money(item.profit)}</td>
+                        <td class="right" style="color:${marginPct >= 30 ? 'var(--good)' : marginPct >= 15 ? 'var(--warn)' : 'var(--danger)'}">
+                          ${marginPct.toFixed(1)}%
+                        </td>
+                      </tr>
+                    `;
+                  }).join('') || '<tr><td colspan="5" class="muted">No sales data available.</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>📦 Sales by Category</h3>
+          <div class="section">
+            <div style="padding:16px;">
+              ${Object.entries(categorySales).sort((a,b) => b[1] - a[1]).map(([cat, amt]) => {
+                const maxCat = Math.max(...Object.values(categorySales), 1);
+                const widthPct = (amt / maxCat) * 100;
+                return `
+                  <div style="margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                      <span style="font-weight:600;">${cat}</span>
+                      <span style="font-family:monospace;color:var(--muted);">₹${money(amt)}</span>
+                    </div>
+                    <div style="background:var(--panel-2);border-radius:4px;height:20px;position:relative;overflow:hidden;">
+                      <div style="width:${widthPct}%;height:100%;background:var(--gradient-success);transition:width 0.3s;"></div>
+                    </div>
+                  </div>
+                `;
+              }).join('') || '<div class="muted">No category data.</div>'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Store Comparison -->
       <div class="card">
-        <h3>Invoice History</h3>
+        <h3>🏪 Store Performance Comparison</h3>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Store</th>
+                  <th class="right">Total Orders</th>
+                  <th class="right">Total Revenue</th>
+                  <th class="right">Avg Order Value</th>
+                  <th class="right">Performance</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.values(storeSales).sort((a,b) => b.revenue - a.revenue).map(store => {
+                  const avgOrder = store.orders > 0 ? store.revenue / store.orders : 0;
+                  const maxRevenue = Math.max(...Object.values(storeSales).map(s => s.revenue), 1);
+                  const perfPct = (store.revenue / maxRevenue) * 100;
+                  return `
+                    <tr>
+                      <td><strong>${store.name}</strong></td>
+                      <td class="right">${store.orders}</td>
+                      <td class="right mono">₹${money(store.revenue)}</td>
+                      <td class="right mono">₹${money(avgOrder)}</td>
+                      <td class="right">
+                        <div style="display:inline-block;width:100px;background:var(--panel-2);border-radius:4px;height:20px;position:relative;overflow:hidden;">
+                          <div style="width:${perfPct}%;height:100%;background:var(--gradient-primary);"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="5" class="muted">No store data available.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cashier Performance -->
+      <div class="card">
+        <h3>👤 Cashier Performance Metrics</h3>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cashier</th>
+                  <th class="right">Total Orders</th>
+                  <th class="right">Total Revenue</th>
+                  <th class="right">Avg Order Value</th>
+                  <th class="right">Performance</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${Object.values(cashierPerf).sort((a,b) => b.revenue - a.revenue).map(cashier => {
+                  const maxRevenue = Math.max(...Object.values(cashierPerf).map(c => c.revenue), 1);
+                  const perfPct = (cashier.revenue / maxRevenue) * 100;
+                  return `
+                    <tr>
+                      <td><strong>${cashier.name}</strong></td>
+                      <td class="right">${cashier.orders}</td>
+                      <td class="right mono">₹${money(cashier.revenue)}</td>
+                      <td class="right mono">₹${money(cashier.avgOrder)}</td>
+                      <td class="right">
+                        <div style="display:inline-block;width:100px;background:var(--panel-2);border-radius:4px;height:20px;position:relative;overflow:hidden;">
+                          <div style="width:${perfPct}%;height:100%;background:var(--gradient-success);"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="5" class="muted">No cashier data available.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Method Analysis -->
+      <div class="grid">
+        <div class="card">
+          <h3>💳 Payment Method Breakdown</h3>
+          <div class="section">
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Payment Method</th>
+                    <th class="right">Transactions</th>
+                    <th class="right">Total Amount</th>
+                    <th class="right">Avg Transaction</th>
+                    <th class="right">% of Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(() => {
+                    const paymentStats = {};
+                    let grandTotal = 0;
+                    
+                    salesInvoices.forEach(inv => {
+                      const payments = Array.isArray(inv.payments) ? inv.payments : [inv.payments];
+                      payments.forEach(p => {
+                        const mode = p.mode || 'Cash';
+                        if (!paymentStats[mode]) {
+                          paymentStats[mode] = { count: 0, total: 0 };
+                        }
+                        paymentStats[mode].count++;
+                        paymentStats[mode].total += p.amount || 0;
+                        grandTotal += p.amount || 0;
+                      });
+                    });
+                    
+                    const paymentMethods = {
+                      'Cash': { icon: '💵', color: 'var(--good)' },
+                      'Card': { icon: '💳', color: 'var(--accent)' },
+                      'UPI': { icon: '📱', color: 'var(--accent-2)' },
+                      'Wallet': { icon: '👛', color: 'var(--warn)' },
+                      'Credit': { icon: '🏦', color: 'var(--muted)' }
+                    };
+                    
+                    return Object.entries(paymentStats)
+                      .sort((a, b) => b[1].total - a[1].total)
+                      .map(([mode, stats]) => {
+                        const avgTxn = stats.count > 0 ? stats.total / stats.count : 0;
+                        const percentage = grandTotal > 0 ? (stats.total / grandTotal) * 100 : 0;
+                        const methodInfo = paymentMethods[mode] || { icon: '💰', color: 'var(--muted)' };
+                        
+                        return `
+                          <tr>
+                            <td><strong>${methodInfo.icon} ${mode}</strong></td>
+                            <td class="right">${stats.count}</td>
+                            <td class="right mono" style="color:${methodInfo.color};font-weight:bold;">₹${money(stats.total)}</td>
+                            <td class="right mono">₹${money(avgTxn)}</td>
+                            <td class="right">
+                              <div style="display:inline-flex;align-items:center;gap:8px;">
+                                <div style="width:100px;background:var(--panel-2);border-radius:4px;height:20px;position:relative;overflow:hidden;">
+                                  <div style="width:${percentage}%;height:100%;background:${methodInfo.color};"></div>
+                                </div>
+                                <span style="font-weight:bold;min-width:45px;">${percentage.toFixed(1)}%</span>
+                              </div>
+                            </td>
+                          </tr>
+                        `;
+                      }).join('') || '<tr><td colspan="5" class="muted">No payment data available.</td></tr>';
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>💰 Daily Cash Reconciliation</h3>
+          <div class="section">
+            <div style="padding:16px;">
+              ${(() => {
+                const dailyCash = {};
+                
+                salesInvoices.forEach(inv => {
+                  const payments = Array.isArray(inv.payments) ? inv.payments : [inv.payments];
+                  payments.forEach(p => {
+                    if (p.mode === 'Cash') {
+                      const date = inv.date;
+                      if (!dailyCash[date]) dailyCash[date] = 0;
+                      dailyCash[date] += p.amount || 0;
+                    }
+                  });
+                });
+                
+                const last7Days = Object.entries(dailyCash)
+                  .sort((a, b) => b[0].localeCompare(a[0]))
+                  .slice(0, 7);
+                
+                if (last7Days.length === 0) {
+                  return '<div class="muted">No cash transactions yet.</div>';
+                }
+                
+                const maxCash = Math.max(...last7Days.map(([, amt]) => amt), 1);
+                
+                return last7Days.map(([date, amount]) => {
+                  const widthPct = (amount / maxCash) * 100;
+                  const isToday = date === today();
+                  return `
+                    <div style="margin-bottom:16px;">
+                      <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-weight:${isToday ? 'bold' : '500'};">${date}${isToday ? ' (Today)' : ''}</span>
+                        <span style="font-family:monospace;color:var(--good);font-weight:bold;">₹${money(amount)}</span>
+                      </div>
+                      <div style="background:var(--panel-2);border-radius:4px;height:24px;position:relative;overflow:hidden;">
+                        <div style="width:${widthPct}%;height:100%;background:var(--gradient-success);transition:width 0.3s;"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+              })()}
+            </div>
+            <div style="padding:0 16px 16px 16px;">
+              <button class="btn green" id="exportCashReport" style="width:100%;">📊 Export Cash Report</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split Payment Analysis -->
+      <div class="card">
+        <h3>🔀 Split Payment Transactions</h3>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Invoice #</th>
+                  <th>Customer</th>
+                  <th class="right">Total Amount</th>
+                  <th>Payment Methods</th>
+                  <th>Split Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${salesInvoices
+                  .filter(inv => Array.isArray(inv.payments) && inv.payments.length > 1)
+                  .sort((a, b) => b.date.localeCompare(a.date))
+                  .slice(0, 20)
+                  .map(inv => {
+                    const customer = inv.customerId ? db.customers.find(c => c.id === inv.customerId) : null;
+                    const paymentModes = inv.payments.map(p => p.mode).join(', ');
+                    const paymentDetails = inv.payments.map(p => `${p.mode}: ₹${money(p.amount)}`).join(' + ');
+                    
+                    return `
+                      <tr>
+                        <td>${inv.date}</td>
+                        <td><strong>${inv.number}</strong></td>
+                        <td>${customer ? customer.name : 'Walk-in'}</td>
+                        <td class="right mono">₹${money(inv.totals?.total)}</td>
+                        <td><span class="badge" style="background:var(--warn)">${inv.payments.length} methods</span></td>
+                        <td class="muted" style="font-size:12px;">${paymentDetails}</td>
+                      </tr>
+                    `;
+                  }).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;">No split payment transactions found.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invoice History -->
+      <div class="card">
+        <h3>📄 Invoice History</h3>
         <div class="section">
           <div class="row">
             <input class="input" id="repInvSearch" placeholder="Search by Invoice #, Customer Name, or Phone">
@@ -1495,6 +2862,374 @@ function renderReports(root){
   $('#repInvFind').onclick = fillInvoices;
   $('#repInvSearch').onkeydown = (e) => { if (e.key === 'Enter') fillInvoices(); };
   fillInvoices(); // initial fill
+  
+  // Export cash report functionality
+  const exportBtn = $('#exportCashReport');
+  if (exportBtn) {
+    exportBtn.onclick = () => {
+      const dailyCash = {};
+      const cashTransactions = [];
+      
+      salesInvoices.forEach(inv => {
+        const payments = Array.isArray(inv.payments) ? inv.payments : [inv.payments];
+        payments.forEach(p => {
+          if (p.mode === 'Cash') {
+            const date = inv.date;
+            if (!dailyCash[date]) dailyCash[date] = 0;
+            dailyCash[date] += p.amount || 0;
+            
+            cashTransactions.push({
+              date: inv.date,
+              time: inv.time,
+              invoice: inv.number,
+              amount: p.amount,
+              store: getStore(inv.storeId)?.name || 'N/A'
+            });
+          }
+        });
+      });
+      
+      // Create CSV content
+      let csv = 'Cash Reconciliation Report\\n\\n';
+      csv += 'Daily Summary\\n';
+      csv += 'Date,Cash Amount\\n';
+      Object.entries(dailyCash)
+        .sort((a, b) => b[0].localeCompare(a[0]))
+        .forEach(([date, amount]) => {
+          csv += `${date},${amount.toFixed(2)}\\n`;
+        });
+      
+      csv += '\\n\\nDetailed Transactions\\n';
+      csv += 'Date,Time,Invoice,Amount,Store\\n';
+      cashTransactions
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .forEach(txn => {
+          csv += `${txn.date},${txn.time},${txn.invoice},${txn.amount.toFixed(2)},${txn.store}\\n`;
+        });
+      
+      // Download CSV
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cash-report-${today()}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      
+      alert('Cash report exported successfully!');
+    };
+  }
+}
+
+/* ====== Low Stock Alerts & Auto-Reorder ====== */
+function renderAlerts(root){
+  const activeAlerts = db.alerts.filter(a => a.status === 'active');
+  const resolvedAlerts = db.alerts.filter(a => a.status === 'resolved').slice(0, 20);
+  
+  root.innerHTML = `
+    <div class="stack">
+      <!-- Alert Summary -->
+      <div class="totals" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="kpi">
+          <h4>🔔 Active Alerts</h4>
+          <div class="val" style="color:var(--danger)">${activeAlerts.length}</div>
+        </div>
+        <div class="kpi">
+          <h4>📦 Reorder Suggestions</h4>
+          <div class="val">${db.reorderSuggestions.filter(r => r.status === 'pending').length}</div>
+        </div>
+        <div class="kpi">
+          <h4>✅ Resolved Today</h4>
+          <div class="val">${db.alerts.filter(a => a.resolvedAt?.startsWith(today())).length}</div>
+        </div>
+      </div>
+
+      <!-- Active Low Stock Alerts -->
+      <div class="card">
+        <h3>🔴 Active Low Stock Alerts</h3>
+        <div class="section">
+          <div class="row" style="margin-bottom:16px;">
+            <button class="btn warn" id="checkAllStock">🔍 Check All Stock Levels</button>
+            <button class="btn green" id="generateBulkPO">📥 Generate Bulk Purchase Order</button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Store</th>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th class="right">Current</th>
+                  <th class="right">Min</th>
+                  <th class="right">Velocity/Day</th>
+                  <th class="right">Suggested Order</th>
+                  <th>Created</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="activeAlertsBody">
+                ${activeAlerts.map(alert => {
+                  const store = getStore(alert.storeId);
+                  const product = getProduct(alert.productId);
+                  const suggestion = db.reorderSuggestions.find(s => s.alertId === alert.id && s.status === 'pending');
+                  return `
+                    <tr>
+                      <td><span class="status out">CRITICAL</span></td>
+                      <td>${store?.name || 'N/A'}</td>
+                      <td><strong>${product?.name || 'N/A'}</strong><br><span class="muted" style="font-size:11px;">${product?.sku || ''}</span></td>
+                      <td>${alert.size}/${alert.color}</td>
+                      <td class="right" style="color:var(--danger);font-weight:bold;">${alert.currentQty}</td>
+                      <td class="right">${alert.minQty}</td>
+                      <td class="right mono">${alert.salesVelocity}</td>
+                      <td class="right" style="color:var(--good);font-weight:bold;">${alert.reorderQty}</td>
+                      <td class="muted" style="font-size:12px;">${new Date(alert.createdAt).toLocaleString()}</td>
+                      <td class="right">
+                        <button class="btn green" data-alert-id="${alert.id}" data-action="create-po">Create PO</button>
+                        <button class="btn secondary" data-alert-id="${alert.id}" data-action="dismiss">Dismiss</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="10" class="muted" style="text-align:center;padding:20px;">✅ No active alerts. All stock levels are healthy!</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reorder Suggestions -->
+      <div class="card">
+        <h3>📋 Smart Reorder Suggestions</h3>
+        <div class="section">
+          <p class="muted" style="margin-bottom:16px;">Based on sales velocity analysis (last 30 days), here are suggested reorder quantities to maintain 30-day stock levels.</p>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Store</th>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th class="right">Current Stock</th>
+                  <th class="right">Suggested Qty</th>
+                  <th class="right">Estimated Cost</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${db.reorderSuggestions.filter(s => s.status === 'pending').map(suggestion => {
+                  const store = getStore(suggestion.storeId);
+                  const product = getProduct(suggestion.productId);
+                  const stockItem = db.stock.find(s => 
+                    s.storeId === suggestion.storeId && 
+                    s.productId === suggestion.productId && 
+                    s.size === suggestion.size && 
+                    s.color === suggestion.color
+                  );
+                  
+                  // Estimate cost from recent purchases
+                  let estimatedCost = 0;
+                  const recentPurchases = db.purchases.filter(p => 
+                    p.items.some(i => i.productId === suggestion.productId)
+                  ).slice(-3);
+                  
+                  if (recentPurchases.length > 0) {
+                    const costs = recentPurchases.map(p => {
+                      const item = p.items.find(i => i.productId === suggestion.productId);
+                      return item?.cost || 0;
+                    });
+                    const avgCost = costs.reduce((a,b) => a+b, 0) / costs.length;
+                    estimatedCost = avgCost * suggestion.suggestedQty;
+                  }
+                  
+                  return `
+                    <tr>
+                      <td>${store?.name || 'N/A'}</td>
+                      <td><strong>${product?.name || 'N/A'}</strong></td>
+                      <td>${suggestion.size}/${suggestion.color}</td>
+                      <td class="right">${stockItem?.qty || 0}</td>
+                      <td class="right" style="font-weight:bold;color:var(--accent)">${suggestion.suggestedQty}</td>
+                      <td class="right mono">${estimatedCost > 0 ? '₹' + money(estimatedCost) : 'N/A'}</td>
+                      <td><span class="badge" style="background:var(--warn)">${suggestion.status}</span></td>
+                      <td class="right">
+                        <button class="btn green" data-suggestion-id="${suggestion.id}" data-action="approve">✓ Approve</button>
+                        <button class="btn red" data-suggestion-id="${suggestion.id}" data-action="reject">✗ Reject</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="8" class="muted" style="text-align:center;">No pending reorder suggestions.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recently Resolved Alerts -->
+      <div class="card">
+        <h3>✅ Recently Resolved Alerts</h3>
+        <div class="section">
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Store</th>
+                  <th>Product</th>
+                  <th>Variant</th>
+                  <th>Resolved At</th>
+                  <th>Action Taken</th>
+                  <th>Resolved By</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${resolvedAlerts.map(alert => {
+                  const store = getStore(alert.storeId);
+                  const product = getProduct(alert.productId);
+                  const resolvedBy = alert.resolvedBy ? db.users.find(u => u.id === alert.resolvedBy) : null;
+                  return `
+                    <tr>
+                      <td>${store?.name || 'N/A'}</td>
+                      <td>${product?.name || 'N/A'}</td>
+                      <td>${alert.size}/${alert.color}</td>
+                      <td class="muted">${alert.resolvedAt ? new Date(alert.resolvedAt).toLocaleString() : 'N/A'}</td>
+                      <td><span class="badge" style="background:var(--good)">${alert.action || 'Resolved'}</span></td>
+                      <td>${resolvedBy?.name || 'System'}</td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="6" class="muted" style="text-align:center;">No resolved alerts yet.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Check all stock levels button
+  $('#checkAllStock').onclick = async () => {
+    let alertCount = 0;
+    db.stock.forEach(stockItem => {
+      if (stockItem.min > 0 && stockItem.qty <= stockItem.min) {
+        // Check if alert doesn't already exist
+        const alertKey = `${stockItem.storeId}-${stockItem.productId}-${stockItem.size}-${stockItem.color}`;
+        const exists = db.alerts.find(a => a.key === alertKey && a.status === 'active');
+        if (!exists) {
+          checkLowStock(stockItem.storeId, stockItem.productId, stockItem.size, stockItem.color);
+          alertCount++;
+        }
+      }
+    });
+    await save();
+    renderTabs(); // Update notification badge
+    alert(`Stock check complete. ${alertCount} new alert(s) generated.`);
+    renderAlerts(root);
+  };
+
+  // Generate bulk purchase order
+  $('#generateBulkPO').onclick = () => {
+    if (activeAlerts.length === 0) {
+      alert('No active alerts to create purchase orders from.');
+      return;
+    }
+    
+    // Group by store
+    const storeGroups = {};
+    activeAlerts.forEach(alert => {
+      if (!storeGroups[alert.storeId]) {
+        storeGroups[alert.storeId] = [];
+      }
+      storeGroups[alert.storeId].push(alert);
+    });
+    
+    // Navigate to purchase page with pre-filled data
+    localStorage.setItem('bulkPOData', JSON.stringify(storeGroups));
+    alert(`Bulk purchase order data prepared for ${Object.keys(storeGroups).length} store(s). Opening Purchase page...`);
+    open('purchase');
+  };
+
+  // Create individual PO buttons
+  $$('button[data-action="create-po"]').forEach(btn => {
+    btn.onclick = async () => {
+      const alertId = btn.dataset.alertId;
+      const alert = db.alerts.find(a => a.id === alertId);
+      if (!alert) return;
+      
+      // Store data for purchase page
+      localStorage.setItem('singlePOData', JSON.stringify(alert));
+      alert('Purchase order data prepared. Opening Purchase page...');
+      open('purchase');
+    };
+  });
+
+  // Dismiss alert buttons
+  $$('button[data-action="dismiss"]').forEach(btn => {
+    btn.onclick = async () => {
+      const alertId = btn.dataset.alertId;
+      const alert = db.alerts.find(a => a.id === alertId);
+      if (!alert) return;
+      
+      if (confirm('Are you sure you want to dismiss this alert? The stock is still low.')) {
+        alert.status = 'resolved';
+        alert.action = 'Dismissed';
+        alert.resolvedAt = new Date().toISOString();
+        alert.resolvedBy = currentUser ? currentUser.id : null;
+        
+        // Update related suggestion
+        const suggestion = db.reorderSuggestions.find(s => s.alertId === alertId);
+        if (suggestion) suggestion.status = 'dismissed';
+        
+        await save();
+        renderTabs(); // Update notification badge
+        renderAlerts(root);
+      }
+    };
+  });
+
+  // Approve suggestion buttons
+  $$('button[data-action="approve"]').forEach(btn => {
+    btn.onclick = async () => {
+      const suggestionId = btn.dataset.suggestionId;
+      const suggestion = db.reorderSuggestions.find(s => s.id === suggestionId);
+      if (!suggestion) return;
+      
+      suggestion.status = 'approved';
+      suggestion.approvedAt = new Date().toISOString();
+      suggestion.approvedBy = currentUser ? currentUser.id : null;
+      
+      // Store for purchase page
+      localStorage.setItem('singlePOData', JSON.stringify(suggestion));
+      await save();
+      alert('Reorder approved! Opening Purchase page to create purchase order...');
+      open('purchase');
+    };
+  });
+
+  // Reject suggestion buttons
+  $$('button[data-action="reject"]').forEach(btn => {
+    btn.onclick = async () => {
+      const suggestionId = btn.dataset.suggestionId;
+      const suggestion = db.reorderSuggestions.find(s => s.id === suggestionId);
+      if (!suggestion) return;
+      
+      if (confirm('Reject this reorder suggestion?')) {
+        suggestion.status = 'rejected';
+        suggestion.rejectedAt = new Date().toISOString();
+        suggestion.rejectedBy = currentUser ? currentUser.id : null;
+        
+        // Resolve related alert
+        const alert = db.alerts.find(a => a.id === suggestion.alertId);
+        if (alert) {
+          alert.status = 'resolved';
+          alert.action = 'Suggestion Rejected';
+          alert.resolvedAt = new Date().toISOString();
+          alert.resolvedBy = currentUser ? currentUser.id : null;
+        }
+        
+        await save();
+        renderTabs(); // Update notification badge
+        renderAlerts(root);
+      }
+    };
+  });
 }
 
 /* ====== User Management ====== */
@@ -1724,20 +3459,133 @@ function renderUsers(root){
 /* ====== Settings / Data ====== */
 function renderSettings(root){
   root.innerHTML = `
-    <div class="card">
-      <h3>Data & Settings</h3>
-      <div class="section stack">
-        <div class="row">
-          <button class="btn" id="btnDemo">Load Demo Data</button>
-          <button class="btn" id="btnBackup">Export Backup</button>
-          <input type="file" id="fileImport" style="display:none" accept="application/json">
-          <button class="btn" id="btnRestore">Import Backup</button>
-          <button class="btn red" id="btnClear">Clear All Data</button>
+    <div class="stack">
+      <div class="card">
+        <h3>💰 Cash Reconciliation</h3>
+        <div class="section">
+          <p class="muted" style="margin-bottom:16px;">Record opening and closing cash for daily reconciliation</p>
+          <div class="row" style="margin-bottom:16px;">
+            <select class="select" id="reconStore">
+              <option value="">Select Store</option>
+              ${db.stores.map(s=>`<option value="${s.id}">${s.name}</option>`).join('')}
+            </select>
+            <input class="input" id="reconDate" type="date" value="${today()}">
+          </div>
+          <div class="row" style="margin-bottom:16px;">
+            <input class="input" id="openingCash" placeholder="Opening Cash" type="number" step="0.01">
+            <input class="input" id="closingCash" placeholder="Closing Cash" type="number" step="0.01">
+          </div>
+          <div class="row">
+            <button class="btn green" id="saveRecon">Save Reconciliation</button>
+          </div>
         </div>
-        <div class="muted">For e‑invoice/e‑way bill integration, push invoices server‑side to NIC via your provider; client-only apps cannot securely hold credentials.</div>
+        <div class="section">
+          <h4 style="margin:0 0 12px 0;font-size:14px;">Recent Reconciliations</h4>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Store</th>
+                  <th class="right">Opening</th>
+                  <th class="right">Cash Sales</th>
+                  <th class="right">Closing</th>
+                  <th class="right">Variance</th>
+                </tr>
+              </thead>
+              <tbody id="reconBody">
+                ${(db.cashReconciliation || []).sort((a,b) => b.date.localeCompare(a.date)).slice(0, 10).map(recon => {
+                  const store = getStore(recon.storeId);
+                  const variance = recon.closingCash - (recon.openingCash + recon.expectedCash);
+                  return `
+                    <tr>
+                      <td>${recon.date}</td>
+                      <td>${store?.name || 'N/A'}</td>
+                      <td class="right mono">₹${money(recon.openingCash)}</td>
+                      <td class="right mono">₹${money(recon.expectedCash)}</td>
+                      <td class="right mono">₹${money(recon.closingCash)}</td>
+                      <td class="right mono" style="color:${Math.abs(variance) < 1 ? 'var(--good)' : 'var(--danger)'}">
+                        ${variance >= 0 ? '+' : ''}₹${money(variance)}
+                      </td>
+                    </tr>
+                  `;
+                }).join('') || '<tr><td colspan="6" class="muted">No reconciliation records yet.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <h3>Data & Settings</h3>
+        <div class="section stack">
+          <div class="row">
+            <button class="btn" id="btnDemo">Load Demo Data</button>
+            <button class="btn" id="btnBackup">Export Backup</button>
+            <input type="file" id="fileImport" style="display:none" accept="application/json">
+            <button class="btn" id="btnRestore">Import Backup</button>
+            <button class="btn red" id="btnClear">Clear All Data</button>
+          </div>
+          <div class="muted">For e‑invoice/e‑way bill integration, push invoices server‑side to NIC via your provider; client-only apps cannot securely hold credentials.</div>
+        </div>
       </div>
     </div>
   `;
+  
+  $('#saveRecon').onclick = async () => {
+    const storeId = $('#reconStore').value;
+    const date = $('#reconDate').value;
+    const openingCash = parseFloat($('#openingCash').value) || 0;
+    const closingCash = parseFloat($('#closingCash').value) || 0;
+    
+    if (!storeId) return alert('Please select a store');
+    if (!date) return alert('Please select a date');
+    
+    // Calculate expected cash from sales
+    const salesInvoices = db.invoices.filter(inv => 
+      inv.date === date && 
+      inv.storeId === storeId && 
+      !inv.number?.startsWith('REF-')
+    );
+    
+    let expectedCash = 0;
+    salesInvoices.forEach(inv => {
+      const payments = Array.isArray(inv.payments) ? inv.payments : [inv.payments];
+      payments.forEach(p => {
+        if (p.mode === 'Cash') {
+          expectedCash += p.amount || 0;
+        }
+      });
+    });
+    
+    // Check if reconciliation already exists for this date/store
+    const existingIndex = db.cashReconciliation.findIndex(r => 
+      r.date === date && r.storeId === storeId
+    );
+    
+    const reconciliation = {
+      id: existingIndex >= 0 ? db.cashReconciliation[existingIndex].id : uid(),
+      date,
+      storeId,
+      openingCash,
+      closingCash,
+      expectedCash,
+      variance: closingCash - (openingCash + expectedCash),
+      recordedBy: currentUser ? currentUser.id : null,
+      recordedAt: new Date().toISOString()
+    };
+    
+    if (existingIndex >= 0) {
+      db.cashReconciliation[existingIndex] = reconciliation;
+    } else {
+      db.cashReconciliation.push(reconciliation);
+    }
+    
+    await save();
+    alert('Cash reconciliation saved successfully!');
+    renderSettings(root);
+  };
+  
   $('#btnDemo').onclick=async ()=>{ loadDemo(); await save(); alert('Demo data loaded'); open('dashboard'); };
   $('#btnBackup').onclick=()=>{
     const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
