@@ -307,8 +307,8 @@
 <header>
   <div class="bar">
     <div class="brand">
-      <div class="logo">C</div>
-      <h1>Clothix – Multi‑Store</h1>
+      <div class="logo">M</div>
+      <h1>Multi-Store Manager</h1>
       <span class="chip">GST-ready</span>
     </div>
     <div class="tabs" id="tabs"></div>
@@ -349,12 +349,13 @@
 document.addEventListener('DOMContentLoaded', function() {
 /* ====== Data Model (localStorage) ======
 stores: [{id,name,code,address,phone}]
-products: [{id,sku,style,name,brand,category,hsn,taxPct,sizes[],colors[],mrp,price,barcode,attributes,variants:[{size,color,sku,barcode}]}]
+products: [{id,sku,style,name,brand,category,hsn,taxPct,sizes[],colors[],mrp,price,barcode,attributes,variants:[{size,color,sku,barcode}],productType}]
 stock: [{storeId, productId, size, color, qty, min}]
 customers: [{id,name,phone,gstin,address}]
 invoices: [{id, date, time, storeId, number, customerId, items:[{productId,size,color,qty,price,taxPct,discount}], totals:{sub,tax,total,round}, payments:{mode,amount}, notes}]
 transfers: [{id,date,fromStore,toStore,items:[{productId,size,color,qty}], note}]
 purchases: [{id,date,storeId,ref,items:[{productId,size,color,qty,cost}], note}]
+categories: [{id,name,type}]
 ======================================== */
 const DBKEY='clothix.db.v1';
 const $ = sel => document.querySelector(sel);
@@ -419,6 +420,14 @@ function initDB() {
     alerts: [],
     reorderSuggestions: [],
     cashReconciliation: [],
+    categories: [
+      {id: 'clothing', name: 'Clothing', subcategories: ['Men > Tees', 'Men > Jeans', 'Men > Shirts', 'Women > Tops', 'Women > Dresses', 'Kids > T-Shirts']},
+      {id: 'household', name: 'Household Items', subcategories: ['Kitchen > Utensils', 'Kitchen > Appliances', 'Bathroom > Accessories', 'Cleaning > Supplies', 'Storage > Containers', 'Decor > Items']},
+      {id: 'electronics', name: 'Electronics', subcategories: ['Mobile > Phones', 'Mobile > Accessories', 'Computers > Laptops', 'Computers > Accessories', 'Audio > Headphones', 'Audio > Speakers']},
+      {id: 'groceries', name: 'Groceries', subcategories: ['Snacks', 'Beverages', 'Dairy', 'Frozen Foods', 'Packaged Foods', 'Fresh Produce']},
+      {id: 'stationery', name: 'Stationery', subcategories: ['Writing > Pens', 'Writing > Pencils', 'Paper > Notebooks', 'Paper > Sheets', 'Art > Supplies', 'Office > Supplies']},
+      {id: 'cosmetics', name: 'Cosmetics & Beauty', subcategories: ['Skincare', 'Makeup', 'Haircare', 'Fragrances', 'Personal Care', 'Beauty Tools']}
+    ],
     seq: {inv:1,trn:1,pur:1}
   };
 }
@@ -581,6 +590,33 @@ function ensureDataStructure(data) {
   data.purchases = data.purchases || [];
   data.users = data.users || [];
   data.seq = data.seq || {inv:1,trn:1,pur:1};
+  
+  // Ensure categories exist
+  if (!data.categories || data.categories.length === 0) {
+    data.categories = [
+      {id: 'clothing', name: 'Clothing', subcategories: ['Men > Tees', 'Men > Jeans', 'Men > Shirts', 'Women > Tops', 'Women > Dresses', 'Kids > T-Shirts']},
+      {id: 'household', name: 'Household Items', subcategories: ['Kitchen > Utensils', 'Kitchen > Appliances', 'Bathroom > Accessories', 'Cleaning > Supplies', 'Storage > Containers', 'Decor > Items']},
+      {id: 'electronics', name: 'Electronics', subcategories: ['Mobile > Phones', 'Mobile > Accessories', 'Computers > Laptops', 'Computers > Accessories', 'Audio > Headphones', 'Audio > Speakers']},
+      {id: 'groceries', name: 'Groceries', subcategories: ['Snacks', 'Beverages', 'Dairy', 'Frozen Foods', 'Packaged Foods', 'Fresh Produce']},
+      {id: 'stationery', name: 'Stationery', subcategories: ['Writing > Pens', 'Writing > Pencils', 'Paper > Notebooks', 'Paper > Sheets', 'Art > Supplies', 'Office > Supplies']},
+      {id: 'cosmetics', name: 'Cosmetics & Beauty', subcategories: ['Skincare', 'Makeup', 'Haircare', 'Fragrances', 'Personal Care', 'Beauty Tools']}
+    ];
+  }
+  
+  // Backward compatibility: Add productType to existing products
+  if (data.products && data.products.length > 0) {
+    data.products.forEach(p => {
+      if (!p.productType) {
+        // Default to 'clothing' for backward compatibility
+        p.productType = 'clothing';
+      }
+      // Ensure variants exist
+      if (!p.variants || p.variants.length === 0) {
+        p.variants = [{size:'Standard',color:'Default',sku:p.sku||'SKU',barcode:p.barcode||''}];
+      }
+    });
+  }
+  
   return data;
 }
 function uid(){ return Math.random().toString(36).slice(2,10); }
@@ -1389,11 +1425,20 @@ function renderCatalog(root){
   const sizesDefault = 'XS,S,M,L,XL,XXL';
   root.innerHTML = `
     <div class="card">
-      <h3>New Product (Style)</h3>
+      <h3>New Product</h3>
       <div class="section stack">
         <div class="row">
-          <input class="input" id="pName" placeholder="Name (e.g., Polo T-Shirt)">
-          <input class="input" id="pStyle" placeholder="Style Code">
+          <select class="select" id="pType" style="flex:1">
+            <option value="">Select Product Type</option>
+            ${(db.categories || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+          </select>
+          <select class="select" id="pCategory" style="flex:1" disabled>
+            <option value="">First select product type</option>
+          </select>
+        </div>
+        <div class="row">
+          <input class="input" id="pName" placeholder="Name (e.g., Polo T-Shirt or Dinner Plate)">
+          <input class="input" id="pStyle" placeholder="Style/Model Code">
           <input class="input" id="pBrand" placeholder="Brand">
         </div>
         <div class="row">
@@ -1403,14 +1448,14 @@ function renderCatalog(root){
           <input class="input" id="pTax" placeholder="GST % (e.g., 5, 12)">
         </div>
         <div class="row">
-          <input class="input" id="pCategory" placeholder="Category (e.g., Men > Tees)">
           <input class="input" id="pMRP" placeholder="MRP">
           <input class="input" id="pPrice" placeholder="Sale Price">
         </div>
         <div class="row">
-          <input class="input" id="pSizes" placeholder="Sizes (comma separated)" value="${sizesDefault}">
-          <input class="input" id="pColors" placeholder="Colors (comma separated)">
+          <input class="input" id="pSizes" placeholder="Sizes/Variants (comma separated, leave empty if not applicable)" value="${sizesDefault}">
+          <input class="input" id="pColors" placeholder="Colors/Options (comma separated, leave empty if not applicable)">
         </div>
+        <div class="muted" style="font-size:13px;margin-bottom:8px">💡 Tip: For household items, you can use Size field for capacity/weight (e.g., 500ml, 1kg) and Color for material/finish</div>
         <div class="row">
           <button class="btn" id="genVar">Generate Variants</button>
           <button class="btn green" id="saveProd">Save Product</button>
@@ -1422,6 +1467,10 @@ function renderCatalog(root){
       <h3>Product List</h3>
       <div class="section">
         <div class="row">
+          <select class="select" id="pTypeFilter" style="flex:1">
+            <option value="">All Product Types</option>
+            ${(db.categories || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+          </select>
           <input class="input" id="pQuery" placeholder="Search name/sku/brand/category">
           <button class="btn" id="pFind">Search</button>
         </div>
@@ -1429,7 +1478,7 @@ function renderCatalog(root){
       <div class="section">
         <div class="table-container">
           <table>
-            <thead><tr><th>Name</th><th>Brand</th><th>SKU</th><th>Tax%</th><th>Variants</th><th></th></tr></thead>
+            <thead><tr><th>Type</th><th>Name</th><th>Brand</th><th>Category</th><th>SKU</th><th>Tax%</th><th>Variants</th><th></th></tr></thead>
             <tbody id="pBody"></tbody>
           </table>
         </div>
@@ -1437,17 +1486,68 @@ function renderCatalog(root){
     </div>
   `;
   let currentVariants=[];
+  
+  // Handle product type change to populate categories
+  $('#pType').onchange = () => {
+    const typeId = $('#pType').value;
+    const categorySelect = $('#pCategory');
+    if (typeId) {
+      const catType = (db.categories || []).find(c => c.id === typeId);
+      if (catType && catType.subcategories) {
+        categorySelect.disabled = false;
+        categorySelect.innerHTML = '<option value="">Select Category</option>' + 
+          catType.subcategories.map(sub => `<option value="${sub}">${sub}</option>`).join('');
+      }
+      // Update size/color placeholders based on type
+      if (typeId === 'household') {
+        $('#pSizes').placeholder = 'Sizes/Capacity (e.g., 500ml, 1L, Small, Medium, Large)';
+        $('#pColors').placeholder = 'Material/Color (e.g., Plastic-White, Steel-Silver)';
+        $('#pSizes').value = '';
+      } else if (typeId === 'electronics') {
+        $('#pSizes').placeholder = 'Variant (e.g., 64GB, 128GB, 256GB)';
+        $('#pColors').placeholder = 'Color (e.g., Black, White, Blue)';
+        $('#pSizes').value = '';
+      } else if (typeId === 'groceries') {
+        $('#pSizes').placeholder = 'Pack Size (e.g., 100g, 250g, 500g, 1kg)';
+        $('#pColors').placeholder = 'Flavor/Variant (leave empty if not applicable)';
+        $('#pSizes').value = '';
+      } else {
+        $('#pSizes').placeholder = 'Sizes (comma separated)';
+        $('#pColors').placeholder = 'Colors (comma separated)';
+        $('#pSizes').value = 'XS,S,M,L,XL,XXL';
+      }
+    } else {
+      categorySelect.disabled = true;
+      categorySelect.innerHTML = '<option value="">First select product type</option>';
+    }
+  };
+  
   $('#genVar').onclick=()=>{
     const sizes = ($('#pSizes').value||'').split(',').map(s=>s.trim()).filter(Boolean);
     const colors = ($('#pColors').value||'').split(',').map(s=>s.trim()).filter(Boolean);
     const skuMaster = $('#pSKU').value.trim() || 'SKU';
     const barcodeMaster = $('#pBarcode').value.trim();
     currentVariants = [];
-    sizes.forEach(s=>{
-      colors.forEach(c=>{
-        currentVariants.push({size:s,color:c,sku:`${skuMaster}-${s}-${c}`.toUpperCase(),barcode:barcodeMaster? `${barcodeMaster}${s}${c}`:''});
+    
+    // If no sizes and colors, create one default variant
+    if (sizes.length === 0 && colors.length === 0) {
+      currentVariants.push({size:'Standard',color:'Default',sku:skuMaster,barcode:barcodeMaster});
+    } else if (sizes.length > 0 && colors.length === 0) {
+      sizes.forEach(s=>{
+        currentVariants.push({size:s,color:'Default',sku:`${skuMaster}-${s}`.toUpperCase(),barcode:barcodeMaster? `${barcodeMaster}${s}`:''});
       });
-    });
+    } else if (sizes.length === 0 && colors.length > 0) {
+      colors.forEach(c=>{
+        currentVariants.push({size:'Standard',color:c,sku:`${skuMaster}-${c}`.toUpperCase(),barcode:barcodeMaster? `${barcodeMaster}${c}`:''});
+      });
+    } else {
+      sizes.forEach(s=>{
+        colors.forEach(c=>{
+          currentVariants.push({size:s,color:c,sku:`${skuMaster}-${s}-${c}`.toUpperCase(),barcode:barcodeMaster? `${barcodeMaster}${s}${c}`:''});
+        });
+      });
+    }
+    
     const prev = $('#varPreview');
     prev.innerHTML = currentVariants.length? `
       <div class="chips"><span class="chip">Generated ${currentVariants.length} variants</span></div>
@@ -1458,44 +1558,61 @@ function renderCatalog(root){
     ` : `<div class="muted">Add sizes & colors to generate variants.</div>`;
   };
   $('#saveProd').onclick=async ()=>{
+    const productType = $('#pType').value;
+    const selectedCategory = $('#pCategory').value;
+    
+    if(!productType) return alert('Please select a product type');
+    if(!selectedCategory) return alert('Please select a category');
+    
+    const skuValue = $('#pSKU').value.trim();
+    const barcodeValue = $('#pBarcode').value.trim();
+    
     const p={
       id:uid(),
       name:$('#pName').value.trim(),
       style:$('#pStyle').value.trim(),
       brand:$('#pBrand').value.trim(),
-      sku:$('#pSKU').value.trim(),
-      barcode:$('#pBarcode').value.trim(),
+      sku:skuValue,
+      barcode:barcodeValue,
       hsn:$('#pHSN').value.trim(),
       taxPct: +($('#pTax').value||0),
-      category:$('#pCategory').value.trim(),
+      productType: productType,
+      category: selectedCategory,
       mrp:+($('#pMRP').value||0),
       price:+($('#pPrice').value||0),
       sizes:($('#pSizes').value||'').split(',').map(s=>s.trim()).filter(Boolean),
       colors:($('#pColors').value||'').split(',').map(s=>s.trim()).filter(Boolean),
       attributes:{},
-      variants: currentVariants
+      variants: currentVariants.length > 0 ? currentVariants : [{size:'Standard',color:'Default',sku:skuValue||'SKU',barcode:barcodeValue||''}]
     };
     if(!p.name) return alert('Product name is required');
     db.products.push(p); await save(); alert('Product saved'); renderCatalog(root);
   };
   function fillList(){
     const q=($('#pQuery').value||'').toLowerCase();
+    const typeFilter=($('#pTypeFilter').value||'');
     const body=$('#pBody');
     const rows = db.products.filter(p=>{
-      return [p.name,p.sku,p.brand,p.category].join(' ').toLowerCase().includes(q);
+      const matchesSearch = [p.name,p.sku,p.brand,p.category].join(' ').toLowerCase().includes(q);
+      const matchesType = typeFilter ? p.productType === typeFilter : true;
+      return matchesSearch && matchesType;
     }).map(p=>{
+      const typeName = (db.categories || []).find(c => c.id === p.productType)?.name || p.productType || 'N/A';
       return `<tr>
-        <td>${p.name}</td><td>${p.brand||''}</td><td class="mono">${p.sku||''}</td><td>${p.taxPct||0}</td>
+        <td><span class="chip">${typeName}</span></td>
+        <td>${p.name}</td><td>${p.brand||''}</td><td class="muted" style="font-size:12px">${p.category||''}</td><td class="mono">${p.sku||''}</td><td>${p.taxPct||0}</td>
         <td><span class="badge">${(p.variants||[]).length} variants</span></td>
         <td class="right"><button class="btn red" data-id="${p.id}">Delete</button></td>
       </tr>`;
-    }).join('') || `<tr><td colspan="6" class="muted">No products.</td></tr>`;
+    }).join('') || `<tr><td colspan="8" class="muted">No products.</td></tr>`;
     body.innerHTML = rows;
     body.querySelectorAll('.btn.red').forEach(b=>{
       b.onclick=async ()=>{ const id=b.dataset.id; if(confirm('Delete product and stock?')){ db.products=db.products.filter(x=>x.id!==id); db.stock=db.stock.filter(x=>x.productId!==id); await save(); fillList(); } };
     });
   }
-  $('#pFind').onclick=fillList; fillList();
+  $('#pFind').onclick=fillList; 
+  $('#pTypeFilter').onchange=fillList;
+  fillList();
 }
 
 /* ====== Inventory ====== */
@@ -4231,22 +4348,54 @@ function loadDemo(){
   const s1={id:uid(),name:'MG Road',code:'BLR-01',address:'Bengaluru',phone:'080-123456'};
   const s2={id:uid(),name:'Phoenix Mall',code:'BLR-02',address:'Bengaluru',phone:'080-654321'};
   db.stores.push(s1,s2);
-  const p1={id:uid(),name:'Polo Tee',style:'PT-100',brand:'Clothix',sku:'PT100',barcode:'890100',hsn:'6105',taxPct:5,category:'Men > Tees',mrp:799,price:699,
+  
+  // Clothing products
+  const p1={id:uid(),name:'Polo Tee',style:'PT-100',brand:'StyleHub',sku:'PT100',barcode:'890100',hsn:'6105',taxPct:5,productType:'clothing',category:'Men > Tees',mrp:799,price:699,
     sizes:['S','M','L','XL'],colors:['Black','White'],variants:[]};
   p1.sizes.forEach(sz=>p1.colors.forEach(cl=>p1.variants.push({size:sz,color:cl,sku:`PT100-${sz}-${cl.toUpperCase()}`,barcode:`890100${sz[0]}${cl[0]}`})));
-  const p2={id:uid(),name:'Denim Jeans',style:'DJ-220',brand:'Clothix',sku:'DJ220',barcode:'890220',hsn:'6203',taxPct:12,category:'Men > Jeans',mrp:1999,price:1699,
+  
+  const p2={id:uid(),name:'Denim Jeans',style:'DJ-220',brand:'StyleHub',sku:'DJ220',barcode:'890220',hsn:'6203',taxPct:12,productType:'clothing',category:'Men > Jeans',mrp:1999,price:1699,
     sizes:['30','32','34','36'],colors:['Blue'],variants:[]};
   p2.sizes.forEach(sz=>p2.colors.forEach(cl=>p2.variants.push({size:sz,color:cl,sku:`DJ220-${sz}-${cl.toUpperCase()}`,barcode:`890220${sz}${cl[0]}`})));
-  db.products.push(p1,p2);
-  // stock
+  
+  // Household products
+  const p3={id:uid(),name:'Dinner Plate Set',style:'DPS-300',brand:'HomeEssentials',sku:'DPS300',barcode:'890300',hsn:'6912',taxPct:12,productType:'household',category:'Kitchen > Utensils',mrp:599,price:499,
+    sizes:['6-Piece','12-Piece'],colors:['White','Blue'],variants:[]};
+  p3.sizes.forEach(sz=>p3.colors.forEach(cl=>p3.variants.push({size:sz,color:cl,sku:`DPS300-${sz}-${cl.toUpperCase()}`,barcode:`890300${sz[0]}${cl[0]}`})));
+  
+  const p4={id:uid(),name:'Storage Container',style:'SC-400',brand:'HomeEssentials',sku:'SC400',barcode:'890400',hsn:'3923',taxPct:18,productType:'household',category:'Storage > Containers',mrp:299,price:249,
+    sizes:['500ml','1L','2L'],colors:['Transparent','Blue'],variants:[]};
+  p4.sizes.forEach(sz=>p4.colors.forEach(cl=>p4.variants.push({size:sz,color:cl,sku:`SC400-${sz}-${cl.toUpperCase()}`,barcode:`890400${sz.replace(/[^0-9]/g,'')}${cl[0]}`})));
+  
+  // Electronics
+  const p5={id:uid(),name:'Wireless Earbuds',style:'WE-500',brand:'TechGear',sku:'WE500',barcode:'890500',hsn:'8518',taxPct:18,productType:'electronics',category:'Audio > Headphones',mrp:2999,price:2499,
+    sizes:['Standard'],colors:['Black','White'],variants:[]};
+  p5.sizes.forEach(sz=>p5.colors.forEach(cl=>p5.variants.push({size:sz,color:cl,sku:`WE500-${cl.toUpperCase()}`,barcode:`890500${cl[0]}`})));
+  
+  db.products.push(p1,p2,p3,p4,p5);
+  
+  // stock for store 1
   p1.variants.slice(0,4).forEach(v=>{
     db.stock.push({storeId:s1.id,productId:p1.id,size:v.size,color:v.color,qty:10,min:2});
   });
+  p3.variants.slice(0,2).forEach(v=>{
+    db.stock.push({storeId:s1.id,productId:p3.id,size:v.size,color:v.color,qty:15,min:3});
+  });
+  
+  // stock for store 2
   p2.variants.forEach(v=>{
     db.stock.push({storeId:s2.id,productId:p2.id,size:v.size,color:v.color,qty:6,min:2});
   });
+  p4.variants.forEach(v=>{
+    db.stock.push({storeId:s2.id,productId:p4.id,size:v.size,color:v.color,qty:20,min:5});
+  });
+  p5.variants.forEach(v=>{
+    db.stock.push({storeId:s2.id,productId:p5.id,size:v.size,color:v.color,qty:12,min:3});
+  });
+  
   // customers
-  db.customers.push({id:uid(),name:'Arun',phone:'9876543210',gstin:'',address:'Bengaluru'});
+  db.customers.push({id:uid(),name:'Arun Kumar',phone:'9876543210',gstin:'',address:'Bengaluru'});
+  db.customers.push({id:uid(),name:'Priya Singh',phone:'9988776655',gstin:'',address:'Bengaluru'});
 }
 
 /* ====== Header buttons ====== */

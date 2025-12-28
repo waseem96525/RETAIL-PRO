@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Multi-Store Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 50px;
+            max-width: 900px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #1e293b;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #64748b;
+            font-size: 1.3em;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .hero h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+        .hero p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .category-tag {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .btn {
+            display: block;
+            padding: 20px 30px;
+            border-radius: 12px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border-color: #e0e7ff;
+        }
+        .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .feature {
+            text-align: center;
+            padding: 20px;
+        }
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        .feature h3 {
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .feature p {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+        }
+        @media (max-width: 768px) {
+            .container { padding: 30px 20px; }
+            h1 { font-size: 2em; }
+            .hero h2 { font-size: 1.5em; }
+            .buttons { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Multi-Store Manager</h1>
+        <p class="subtitle">Universal Retail Management System</p>
+
+        <div class="hero">
+            <h2>Now Supporting All Product Categories!</h2>
+            <p>Manage clothing, household items, electronics, groceries, stationery, cosmetics, and more - all in one powerful system.</p>
+            <div class="categories">
+                <span class="category-tag">👕 Clothing</span>
+                <span class="category-tag">🏠 Household</span>
+                <span class="category-tag">💻 Electronics</span>
+                <span class="category-tag">🛒 Groceries</span>
+                <span class="category-tag">✏️ Stationery</span>
+                <span class="category-tag">💄 Cosmetics</span>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <a href="index.html" class="btn btn-primary">
+                🚀 Launch Application
+            </a>
+            <a href="quick-start.html" class="btn btn-secondary">
+                📚 Quick Start Guide
+            </a>
+            <a href="examples.html" class="btn btn-secondary">
+                📦 View Examples
+            </a>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🏪</div>
+                <h3>Multi-Store</h3>
+                <p>Manage inventory across multiple locations</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h3>Real-time Stock</h3>
+                <p>Track stock levels and variants</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">💰</div>
+                <h3>GST Ready</h3>
+                <p>HSN codes and tax calculation</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <h3>Offline Mode</h3>
+                <p>Works without internet</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔍</div>
+                <h3>Barcode Scan</h3>
+                <p>Quick product lookup</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎨</div>
+                <h3>Dark Mode</h3>
+                <p>Beautiful UI themes</p>
+            </div>
+        </div>
+
+        <div style="background: #f8fafc; padding: 25px; border-radius: 12px; margin-top: 30px;">
+            <h3 style="color: #1e293b; margin-bottom: 15px;">✨ What's New?</h3>
+            <ul style="color: #64748b; line-height: 2; padding-left: 20px;">
+                <li><strong>6 Product Categories</strong> - Clothing, Household, Electronics, Groceries, Stationery, Cosmetics</li>
+                <li><strong>Dynamic Forms</strong> - Fields adapt based on product type</li>
+                <li><strong>Smart Variants</strong> - Support for sizes, colors, capacity, material, and more</li>
+                <li><strong>Type Filtering</strong> - Easily filter products by category</li>
+                <li><strong>Updated Demo</strong> - Sample products from multiple categories</li>
+                <li><strong>Backward Compatible</strong> - All existing data preserved</li>
+            </ul>
+        </div>
+
+        <div style="background: #fff7ed; border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; margin-top: 25px;">
+            <strong style="color: #92400e;">📖 First Time User?</strong>
+            <p style="color: #92400e; margin-top: 8px;">
+                Start with the <a href="quick-start.html" style="color: #ea580c; font-weight: 600;">Quick Start Guide</a> to learn how to create products for different categories, or click "Load Demo" in the app to see examples.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Files Included:</strong></p>
+            <p style="margin-top: 8px;">
+                <a href="index.html" style="color: #667eea; text-decoration: none;">index.html</a> • 
+                <a href="quick-start.html" style="color: #667eea; text-decoration: none;">quick-start.html</a> • 
+                <a href="examples.html" style="color: #667eea; text-decoration: none;">examples.html</a> • 
+                <a href="README.md" style="color: #667eea; text-decoration: none;">README.md</a> • 
+                <a href="CHANGES.md" style="color: #667eea; text-decoration: none;">CHANGES.md</a>
+            </p>
+            <p style="margin-top: 20px; font-size: 0.9em;">
+                Multi-Store Manager v2.0 - Now supporting all retail categories
+            </p>
+        </div>
+    </div>
+</body>
+</html>
